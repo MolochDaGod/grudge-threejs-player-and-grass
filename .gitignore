@@ -1,0 +1,33 @@
+# Dependencies / build artifacts
+node_modules/
+.vercel/
+.cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.history/
+*.log
+
+# Source FBX files — the runtime only consumes the converted GLBs, and FBX
+# inputs are tracked in the Asset-Rig-Editor / variant-pipeline repos.
+*.fbx
+*.FBX
+
+# Legacy CC4 / Mixamo character GLBs (~500 MB total) live at the root of
+# character/. Skip them so the repo stays small — the 6 Bip001 race prefab
+# GLBs live under character/races/ and are the only ones we ship.
+character/*.glb
+
+# But keep race prefab GLBs (the actual default characters).
+!character/races/
+!character/races/*.glb
+!character/races/anims/
+!character/races/anims/*.glb

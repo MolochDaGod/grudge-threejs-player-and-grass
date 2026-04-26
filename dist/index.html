@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Grudge Warlords &middot; Player &amp; Grass</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --gold: #c9950a;
+        --gold-bright: #d4a400;
+        --panel: #1a120c;
+        --panel2: #221710;
+        --border: #c9950a;
+        --border-dim: #3a2a1a;
+        --text: #f5e2c1;
+        --muted: #9b7d52;
+        --hp: #d44040;
+        --hp-bg: #5a1010;
+        --mp: #3a7ad8;
+        --mp-bg: #143560;
+        --sp: #9ab830;
+        --sp-bg: #3a4a10;
+      }
+
+      /* ── TOP-LEFT INFO + CHARACTER SELECT ── */
+      #info {
+        font-family: "JetBrains Mono", monospace;
+        line-height: 1.55;
+        max-width: 360px;
+        border: 1px solid var(--border-dim);
+        border-radius: 6px;
+      }
+      #info .controls { color: #d4e8ff; }
+      #info .row {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #info label {
+        color: var(--gold);
+        font-family: "Cinzel", serif;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+      #info select {
+        flex: 1;
+        background: #0a0705;
+        color: var(--text);
+        border: 1px solid var(--border-dim);
+        border-radius: 3px;
+        padding: 4px 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+      }
+      #info select:focus {
+        outline: none;
+        border-color: var(--gold);
+      }
+      #info a.panel-link {
+        display: inline-block;
+        margin-top: 6px;
+        color: var(--gold);
+        text-decoration: none;
+        font-family: "Cinzel", serif;
+        font-size: 11px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        border-bottom: 1px dashed var(--border-dim);
+      }
+      #info a.panel-link:hover { color: var(--gold-bright); border-bottom-color: var(--gold); }
+
+      /* ── BOTTOM HUD (mainpanel-style) ── */
+      #hud {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        display: flex;
+        justify-content: center;
+        padding: 0 12px 12px;
+        pointer-events: none;
+        font-family: "Cinzel", serif;
+      }
+      #hud-frame {
+        pointer-events: auto;
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+        background: linear-gradient(180deg, rgba(26, 18, 12, .92), rgba(10, 7, 5, .92));
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        box-shadow: 0 -6px 24px rgba(0, 0, 0, .55), inset 0 0 16px rgba(0, 0, 0, .5);
+        min-width: 720px;
+      }
+
+      .hud-portrait {
+        width: 64px;
+        height: 64px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: radial-gradient(circle at 50% 40%, rgba(212, 164, 0, .18), #0f0805 70%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold);
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        flex-shrink: 0;
+      }
+      .hud-portrait b {
+        font-size: 13px;
+        color: var(--gold-bright);
+        letter-spacing: 1.5px;
+      }
+
+      .hud-stats {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        min-width: 220px;
+      }
+      .hud-name {
+        color: var(--gold-bright);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+      .hud-sub {
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .bar {
+        position: relative;
+        height: 12px;
+        border: 1px solid var(--border-dim);
+        border-radius: 2px;
+        overflow: hidden;
+        background: #0a0705;
+      }
+      .bar .fill {
+        height: 100%;
+        transition: width .3s ease;
+      }
+      .bar .lbl {
+        position: absolute;
+        inset: 0;
+        text-align: center;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        line-height: 12px;
+        color: #fff;
+        text-shadow: 0 1px 2px #000;
+      }
+      .bar.hp .fill { background: linear-gradient(90deg, #7a1515, var(--hp)); }
+      .bar.mp .fill { background: linear-gradient(90deg, #1a3560, var(--mp)); }
+      .bar.sp .fill { background: linear-gradient(90deg, #4a5a10, var(--sp)); }
+
+      .hud-hotbar {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .slot {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #1a0f08, #0f0805);
+        border: 1.5px solid var(--border-dim);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: var(--text);
+        box-shadow: inset 0 0 6px #000;
+      }
+      .slot.empty { color: #444; }
+      .slot .key {
+        position: absolute;
+        top: 2px;
+        left: 4px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        color: var(--muted);
+      }
+      .hud-divider {
+        width: 1px;
+        background: var(--border-dim);
+        margin: 4px 4px;
+      }
+
+      /* ── RIGHT-SIDE EQUIPMENT PANEL ── */
+      #equipment {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        width: 240px;
+        max-height: 75vh;
+        overflow-y: auto;
+        background: linear-gradient(180deg, rgba(26, 18, 12, .92), rgba(10, 7, 5, .92));
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: var(--text);
+        z-index: 12;
+        display: none;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, .6);
+      }
+      #equipment.visible { display: block; }
+      #equipment h2 {
+        margin: 0 0 8px;
+        font-family: "Cinzel", serif;
+        font-size: 12px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--gold-bright);
+        border-bottom: 1px solid var(--border-dim);
+        padding-bottom: 4px;
+      }
+      #equipment .group { margin-top: 8px; }
+      #equipment .group-label {
+        color: var(--gold);
+        font-family: "Cinzel", serif;
+        font-size: 10px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+      }
+      #equipment .slot-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 2px 0;
+      }
+      #equipment .slot-name {
+        width: 70px;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-size: 10px;
+      }
+      #equipment .variant-btn {
+        background: #0a0705;
+        color: var(--text);
+        border: 1px solid var(--border-dim);
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        cursor: pointer;
+      }
+      #equipment .variant-btn:hover { border-color: var(--gold); }
+      #equipment .variant-btn.equipped {
+        background: var(--gold);
+        color: #0a0705;
+        border-color: var(--gold-bright);
+      }
+      #equipment .empty-msg {
+        color: var(--muted);
+        font-style: italic;
+        font-size: 10px;
+      }
+
+      /* Slot tinting: empty (no clip bound) vs bound vs active. */
+      .slot.bound { border-color: var(--gold); color: var(--gold-bright); }
+      .slot.bound .key { color: var(--gold); }
+    </style>
+
+    <!--
+      Importmap so the runtime SkeletonUtils we use for Mixamo->CC retargeting
+      can pull from the same three version that the bundled script.js was built
+      against (three 0.182.0). Keep these versions in lock-step.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://esm.sh/three@0.182.0",
+          "three/addons/": "https://esm.sh/three@0.182.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <!--
+      Boot module:
+        1. Pull SkeletonUtils + GLTFLoader + FBXLoader from three/addons and
+           stash them on window so the classic-script bundle (script.js)
+           can use them. FBXLoader is needed for the 6 Toon_RTS race FBXs
+           in ../character/races/.
+        2. Inject equipment-manager.js (window.GrudgeEquipmentManager).
+        3. Inject player-config.js (window.GrudgePlayerConfig with the
+           6 race characters: Human / Barbarian / Elf / Dwarf / Orc / Undead).
+        4. Inject script.js (the bundled three.js scene + Player class).
+        5. Populate the character <select> from GrudgePlayerConfig.CHARACTERS
+           and wire up the equipment panel + hotbar feedback.
+    -->
+    <script type="module">
+      import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      // FBXLoader is required by Player._loadModelFile() to load the
+      // 6 Toon_RTS race characters (Human/Barbarian/Elf/Dwarf/Orc/Undead
+      // *.fbx) since Three.js's bundled GLTFLoader can't handle FBX.
+      import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+
+      window.THREE_SkeletonUtils = SkeletonUtils;
+      window.THREE_GLTFLoader = GLTFLoader;
+      window.THREE_FBXLoader = FBXLoader;
+
+      const loadScript = (src) =>
+        new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = src;
+          s.onload = resolve;
+          s.onerror = () => reject(new Error("Failed to load " + src));
+          document.body.appendChild(s);
+        });
+
+      try {
+        await loadScript("./equipment-manager.js");
+        await loadScript("./player-config.js");
+        await loadScript("./script.js");
+
+        const cfg = window.GrudgePlayerConfig;
+        if (cfg && cfg.CHARACTERS) {
+          const sel = document.getElementById("char-select");
+          const current = cfg.resolveCharacter();
+          for (const c of cfg.CHARACTERS) {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = c.label;
+            if (c.id === current.id) opt.selected = true;
+            sel.appendChild(opt);
+          }
+          sel.addEventListener("change", (e) => {
+            const url = new URL(window.location.href);
+            url.searchParams.set("char", e.target.value);
+            window.location.href = url.toString();
+          });
+          // Reflect the selected character in the HUD nameplate.
+          const nm = document.getElementById("hud-name");
+          if (nm) nm.textContent = current.label;
+          const sub = document.getElementById("hud-sub");
+          if (sub) sub.textContent = (current.rigType || "").toUpperCase() + " rig \u00b7 ?char=" + current.id;
+        }
+
+        // ── Equipment side panel ── only meaningful for Bip001 races.
+        function buildEquipmentPanel(player) {
+          const eqRoot = document.getElementById("equipment");
+          if (!eqRoot) return;
+          eqRoot.innerHTML = "<h2>Equipment</h2>";
+          if (!player.equipment || !player.equipment.getGroupedSlots) {
+            eqRoot.innerHTML += '<div class="empty-msg">No modular equipment on this rig.</div>';
+            eqRoot.classList.add("visible");
+            return;
+          }
+          const groups = player.equipment.getGroupedSlots();
+          const groupOrder = ["armor", "weapons", "shields", "utility"];
+          let any = false;
+          for (const groupKey of groupOrder) {
+            const slots = groups[groupKey];
+            if (!slots || !Object.keys(slots).length) continue;
+            any = true;
+            const groupDiv = document.createElement("div");
+            groupDiv.className = "group";
+            groupDiv.innerHTML = '<div class="group-label">' + groupKey + "</div>";
+            for (const [slotName, info] of Object.entries(slots)) {
+              const row = document.createElement("div");
+              row.className = "slot-row";
+              row.innerHTML = '<span class="slot-name">' + slotName + "</span>";
+              for (const variant of info.variants) {
+                const btn = document.createElement("button");
+                btn.className = "variant-btn" + (info.equipped === variant ? " equipped" : "");
+                btn.textContent = variant === "_default" ? "✓" : variant;
+                btn.addEventListener("click", () => {
+                  if (info.equipped === variant) {
+                    player.equipment.unequip(slotName);
+                  } else if (["axe", "hammer", "sword", "pick", "spear", "bow", "staff", "shield"].indexOf(slotName) >= 0) {
+                    player.equipment.equipWeapon(slotName, variant);
+                  } else {
+                    player.equipment.equip(slotName, variant);
+                  }
+                  buildEquipmentPanel(player);
+                });
+                row.appendChild(btn);
+              }
+              groupDiv.appendChild(row);
+            }
+            eqRoot.appendChild(groupDiv);
+          }
+          if (!any) {
+            eqRoot.innerHTML += '<div class="empty-msg">No equipment slots discovered.</div>';
+          }
+          eqRoot.classList.add("visible");
+        }
+
+        // ── Hotbar live-binding ──
+        function refreshHotbar(player) {
+          const map = [
+            { key: "1", slot: "Skill1" },
+            { key: "2", slot: "Skill2" },
+            { key: "3", slot: "Skill3" },
+            { key: "4", slot: "Skill4" },
+            { key: "5", slot: "Skill5" },
+            { key: "6", slot: "Skill6" },
+            { key: "7", slot: "Skill7" },
+            { key: "8", slot: "Skill8" },
+          ];
+          const slots = document.querySelectorAll("#hud .hud-hotbar .slot");
+          slots.forEach((el, idx) => {
+            const entry = map[idx];
+            if (!entry) return;
+            const has = player.hasAction && player.hasAction(entry.slot);
+            el.classList.toggle("bound", !!has);
+            el.classList.toggle("empty", !has);
+          });
+        }
+
+        window.addEventListener("grudge:player-ready", (ev) => {
+          const player = ev.detail.player;
+          buildEquipmentPanel(player);
+          refreshHotbar(player);
+          // Refresh hotbar periodically while clips trickle in.
+          let pulses = 0;
+          const tick = setInterval(() => {
+            refreshHotbar(player);
+            if (++pulses > 20) clearInterval(tick);
+          }, 500);
+        });
+      } catch (err) {
+        console.error("[boot] failed:", err);
+        const info = document.querySelector("#info .controls");
+        if (info) info.textContent = "Failed to boot: " + err.message;
+      }
+    </script>
+  </head>
+
+  <body>
+    <div id="info">
+      <div class="controls">
+        WASD = move &nbsp;|&nbsp; Space = jump &nbsp;|&nbsp; Shift = sprint
+        &nbsp;|&nbsp; MouseWheel = zoom
+        <br />
+        LMB = attack &nbsp;|&nbsp; RMB = block &nbsp;|&nbsp; LCtrl = roll
+        &nbsp;|&nbsp; Q = dodge &nbsp;|&nbsp; 1–9 = skills
+      </div>
+      <div class="row">
+        <label for="char-select">Character</label>
+        <select id="char-select" aria-label="Choose character"></select>
+      </div>
+      <a class="panel-link" href="../mainpanel.html" target="_blank" rel="noopener">
+        Open Full Main Panel &rsaquo;
+      </a>
+    </div>
+
+    <!-- Right-side equipment panel — populated for Bip001 race characters
+         once the Player class fires `grudge:player-ready`. -->
+    <div id="equipment"></div>
+
+    <!-- Bottom HUD: portrait, vitals, hotbar — pulls visuals from the
+         Grudge mainpanel theme (Cinzel + gold + stone) so the deployment
+         already shows "your UI / mainpanel" without leaving the scene. -->
+    <div id="hud">
+      <div id="hud-frame">
+        <div class="hud-portrait"><b id="hud-name">Knight</b></div>
+        <div class="hud-stats">
+          <div>
+            <span class="hud-name" id="hud-name-line">Warlord</span>
+            <span class="hud-sub" id="hud-sub">Lv 1 &middot; Crusade</span>
+          </div>
+          <div class="bar hp"><div class="fill" style="width:78%"></div><div class="lbl">HP 780 / 1000</div></div>
+          <div class="bar mp"><div class="fill" style="width:62%"></div><div class="lbl">MP 310 / 500</div></div>
+          <div class="bar sp"><div class="fill" style="width:91%"></div><div class="lbl">SP 91 / 100</div></div>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-hotbar">
+          <div class="slot"><span class="key">1</span>&#9876;</div>
+          <div class="slot"><span class="key">2</span>&#128737;</div>
+          <div class="slot"><span class="key">3</span>&#128293;</div>
+          <div class="slot"><span class="key">4</span>&#9889;</div>
+          <div class="slot empty"><span class="key">5</span>&middot;</div>
+          <div class="slot"><span class="key">6</span>&#127869;</div>
+          <div class="slot"><span class="key">7</span>&#129482;</div>
+          <div class="slot"><span class="key">8</span>&#128137;</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

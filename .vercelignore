@@ -1,0 +1,22 @@
+# ── Legacy CC3 character GLBs (NOT used by the current Bip001 race pipeline)
+# These were 15-35 MB each and would push the deploy past Vercel's limits.
+# The active deployment only needs ./character/races/ + ./character/races/anims/.
+character/*.glb
+
+# ── Dev junk
+node_modules
+.history
+.local
+.canvas
+.agents
+artifacts
+playwright-report
+test-results
+.playwright
+
+# ── Toolchain (kept locally for re-conversion, not for prod)
+scripts
+
+# ── README, LICENSE etc.
+README.md
+LICENSE.txt
