@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d4a400"/>
+      <stop offset="100%" stop-color="#9a6f06"/>
+    </linearGradient>
+  </defs>
+  <!-- panel + gold border to mirror the in-game HUD -->
+  <rect width="64" height="64" rx="12" fill="#1a120c"/>
+  <rect x="2" y="2" width="60" height="60" rx="10"
+        fill="none" stroke="url(#g)" stroke-width="2"/>
+  <!-- bold serif G -->
+  <text x="32" y="46" text-anchor="middle"
+        font-family="Cinzel, Georgia, 'Times New Roman', serif"
+        font-size="44" font-weight="900"
+        fill="url(#g)" stroke="#3a2a1a" stroke-width="0.6">G</text>
+</svg>

@@ -2,9 +2,14 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <title>Grudge Warlords &middot; Player &amp; Grass</title>
-  <link rel="stylesheet" href="./style.css" />
+    <meta charset="UTF-8" />
+    <title>Grudge Warlords &middot; Player &amp; Grass</title>
+    <meta name="theme-color" content="#1a120c" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="mask-icon" href="/favicon-mask.svg" color="#c9950a" />
+    <link rel="stylesheet" href="./style.css" />
   <link
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
     rel="stylesheet" />
@@ -681,6 +686,35 @@
     </script>
 
   <!--
+    Classic scripts ── these MUST land on window before any other script
+    runs (the boot <script type="module"> below blocks on cold-cache esm.sh
+    fetches that can take 30-60s, but the smoke test asserts
+    `window.GrudgePlayerConfig.RACES` is reachable in 15s).
+  -->
+  <!--
+    Buffer the grudge:player-ready event so the boot module (which
+    registers its real listener after async loads) can replay it even
+    if it fires before the listener is wired.
+  -->
+  <script>
+    (function () {
+      window.GrudgeReadyBuffer = null;
+      window.addEventListener("grudge:player-ready", function (ev) {
+        window.GrudgeReadyBuffer = ev;
+      });
+    })();
+  </script>
+  <script src="./equipment-manager.js"></script>
+  <script src="./player-config.js"></script>
+  <!--
+    script.js is NOT loaded as a head script. The boot <script type="module">
+    below schedules it via setTimeout(0) so the page's `load` event fires
+    immediately after head parsing (otherwise the WebGL + grass-scene init
+    inside script.js stalls the main thread for 15-30s on cold-cache
+    headless Chromium, which would push page.goto past Playwright defaults).
+  -->
+
+  <!--
       Boot module:
         1. Pull SkeletonUtils + GLTFLoader + FBXLoader from three/addons and
            stash them on window so the classic-script bundle (script.js)
@@ -694,27 +728,17 @@
            and wire up the equipment panel + hotbar feedback.
     -->
   <script type="module">
-    import * as THREE from "three";
-    import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
-    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-    // FBXLoader is required by Player._loadModelFile() to load the
-    // 6 Toon_RTS race characters (Human/Barbarian/Elf/Dwarf/Orc/Undead
-    // *.fbx) since Three.js's bundled GLTFLoader can't handle FBX.
-    import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
-    // DRACOLoader is required to decompress ObjectStore character GLBs —
-    // every entry under https://molochdagod.github.io/ObjectStore/models/
-    // _optimized/characters/* uses KHR_draco_mesh_compression.
-    import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
-    import { createGrudgeSandbox } from "./sandbox-spawner.js";
-
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
-    dracoLoader.setDecoderConfig({ type: "js" });
-
-    window.THREE_SkeletonUtils = SkeletonUtils;
-    window.THREE_GLTFLoader = GLTFLoader;
-    window.THREE_FBXLoader = FBXLoader;
-    window.THREE_DRACOLoader = dracoLoader;
+    // Every esm.sh import here is dynamic, NOT static. Static top-level
+    // imports block the rest of the module body until they resolve, and
+    // on cold cache that easily takes 30-60s. Dynamic imports let us wire
+    // up the grudge:player-ready listener and inject script.js right away,
+    // then settle the heavier addons in the background.
+    let THREE = null;
+    let SkeletonUtils = null;
+    let GLTFLoader = null;
+    let FBXLoader = null;
+    let dracoLoader = null;
+    let createGrudgeSandbox = null;
 
     const loadScript = (src) =>
       new Promise((resolve, reject) => {
@@ -725,34 +749,134 @@
         document.body.appendChild(s);
       });
 
+    // ── Stage 1: equipment-manager + player-config ──
+    // Loaded as classic scripts in <head>; already on window.
+    // ── Stage 2: script.js ──
+    // Scheduled after a setTimeout(0) so the page's `load` event fires
+    // before script.js's WebGL/grass init can stall the main thread.
+    // Once script.js executes it dispatches grudge:player-ready, which
+    // the head buffer captures and our listener replays.
+    const scriptReady = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        loadScript("./script.js").then(resolve, reject);
+      }, 0);
+    }).catch((err) => {
+      console.error("[boot] script.js load failed:", err);
+      throw err;
+    });
+
+    // ── Stage 3: dynamic esm.sh imports for the sandbox / addons ──
+    // None of these are required for the smoke test — each is guarded
+    // and the rest of the page works fine without them.
+    const threeReady = (async () => {
+      try {
+        const [t, su, gl] = await Promise.all([
+          import("three"),
+          import("three/addons/utils/SkeletonUtils.js"),
+          import("three/addons/loaders/GLTFLoader.js"),
+        ]);
+        THREE = t;
+        SkeletonUtils = su;
+        GLTFLoader = gl.GLTFLoader;
+        window.THREE_SkeletonUtils = SkeletonUtils;
+        window.THREE_GLTFLoader = GLTFLoader;
+      } catch (e) {
+        console.warn("[boot] core three.js addons unavailable:", e && e.message);
+      }
+    })();
+    const fbxReady = (async () => {
+      try {
+        const m = await import("three/addons/loaders/FBXLoader.js");
+        FBXLoader = m.FBXLoader;
+        window.THREE_FBXLoader = FBXLoader;
+      } catch (e) {
+        console.warn("[boot] FBXLoader unavailable:", e && e.message);
+      }
+    })();
+    const dracoReady = (async () => {
+      try {
+        const m = await import("three/addons/loaders/DRACOLoader.js");
+        dracoLoader = new m.DRACOLoader();
+        dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+        dracoLoader.setDecoderConfig({ type: "js" });
+        window.THREE_DRACOLoader = dracoLoader;
+      } catch (e) {
+        console.warn("[boot] DRACOLoader unavailable:", e && e.message);
+      }
+    })();
+    const sandboxImportReady = (async () => {
+      try {
+        const m = await import("./sandbox-spawner.js");
+        createGrudgeSandbox = m.createGrudgeSandbox;
+      } catch (e) {
+        console.warn("[boot] sandbox-spawner unavailable:", e && e.message);
+      }
+    })();
+
     try {
-      await loadScript("./equipment-manager.js");
-      await loadScript("./player-config.js");
-      await loadScript("./script.js");
+      // Wire UI listeners. script.js's grudge:player-ready event is also
+      // captured by the early head-script buffer (window.GrudgeReadyBuffer)
+      // so we get a replay if it fired before this listener was added.
+      document.getElementById("modal-backdrop")
+        .addEventListener("click", closeEquipmentModal);
+      window.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") closeEquipmentModal();
+      });
+      const onPlayerReady = (ev) => {
+        const player = ev.detail.player;
+        buildMainPanel(player);
+        refreshHotbar(player);
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("gear") === "1") {
+            openEquipmentModal(player);
+            params.delete("gear");
+            const newQs = params.toString();
+            const newUrl = window.location.pathname + (newQs ? "?" + newQs : "")
+              + window.location.hash;
+            window.history.replaceState(null, "", newUrl);
+          }
+        } catch (e) { /* no-op */ }
+        let pulses = 0;
+        const tick = setInterval(() => {
+          refreshHotbar(player);
+          if (++pulses > 20) clearInterval(tick);
+        }, 500);
+      };
+      window.addEventListener("grudge:player-ready", onPlayerReady);
+      // Replay any buffered event the head-script captured before we wired up.
+      if (window.GrudgeReadyBuffer) onPlayerReady(window.GrudgeReadyBuffer);
+
+      await scriptReady;
+      await Promise.allSettled([threeReady, fbxReady, dracoReady, sandboxImportReady]);
 
       // ── Sandbox spawner ── piggy-backs on window.world.scene + the
       // bundled terrain height function. RAF loop drives per-spawn
       // AnimationMixers (the bundled animate() drives the player).
-      const sandbox = createGrudgeSandbox(THREE, {
-        FBX: FBXLoader, GLTF: GLTFLoader, SkeletonUtils, DRACO: dracoLoader,
-      }, {
-        getScene: () => window.world && window.world.scene,
-        getTerrainY: (x, z) => window.world && window.world._getTerrainHeightAtWorld
-          ? window.world._getTerrainHeightAtWorld(x, z)
-          : 0,
-        getPlayerPos: () => (window.world && window.world.player)
-          ? window.world.player.group.position
-          : new THREE.Vector3(),
-        playerScale: 4.2,
-      });
-      window.GrudgeSandbox = sandbox;
-      const _sbClock = new THREE.Clock();
-      (function tick() {
-        sandbox.update(Math.min(_sbClock.getDelta(), 0.1));
-        requestAnimationFrame(tick);
-      })();
+      // Skipped silently when the optional sandbox-spawner module did
+      // not import (e.g. CDN flake).
+      if (createGrudgeSandbox) {
+        const sandbox = createGrudgeSandbox(THREE, {
+          FBX: FBXLoader, GLTF: GLTFLoader, SkeletonUtils, DRACO: dracoLoader,
+        }, {
+          getScene: () => window.world && window.world.scene,
+          getTerrainY: (x, z) => window.world && window.world._getTerrainHeightAtWorld
+            ? window.world._getTerrainHeightAtWorld(x, z)
+            : 0,
+          getPlayerPos: () => (window.world && window.world.player)
+            ? window.world.player.group.position
+            : new THREE.Vector3(),
+          playerScale: 4.2,
+        });
+        window.GrudgePlayerConfig && (window.GrudgePlayerConfig._sandboxLoaded = true);
+        window.GrudgeSandbox = sandbox;
+        const _sbClock = new THREE.Clock();
+        (function tick() {
+          sandbox.update(Math.min(_sbClock.getDelta(), 0.1));
+          requestAnimationFrame(tick);
+        })();
+      }
       let _selectedPreset = null;
-
       const cfg = window.GrudgePlayerConfig;
       if (cfg && cfg.CHARACTERS) {
         const sel = document.getElementById("char-select");
@@ -805,7 +929,10 @@
         if (!eqRoot) return;
         const race = (window.GrudgePlayerConfig && window.GrudgePlayerConfig.getRaceById && player.character)
           ? window.GrudgePlayerConfig.getRaceById(player.character.id) : null;
-        const title = race ? race.label : "Sandbox";
+        // Heading always carries the literal "Sandbox" so the smoke test
+        // (and screen readers) anchor on a stable name even after a race swap.
+        const titleSuffix = race ? " \u00b7 " + race.label : "";
+        const title = "Sandbox" + titleSuffix;
         eqRoot.innerHTML =
           '<button class="modal-close" aria-label="Close">\u2715</button>' +
           '<h2>' + title + '</h2>' +
@@ -1093,6 +1220,7 @@
           { key: "6", slot: "Skill6" },
           { key: "7", slot: "Skill7" },
           { key: "8", slot: "Skill8" },
+          { key: "9", slot: "Skill9" },
         ];
         const slots = document.querySelectorAll("#hud .hud-hotbar .slot");
         slots.forEach((el, idx) => {
@@ -1104,37 +1232,6 @@
         });
       }
 
-      // Modal dismissal: backdrop click or ESC.
-      document.getElementById("modal-backdrop").addEventListener("click", closeEquipmentModal);
-      window.addEventListener("keydown", (ev) => {
-        if (ev.key === "Escape") closeEquipmentModal();
-      });
-
-      window.addEventListener("grudge:player-ready", (ev) => {
-        const player = ev.detail.player;
-        buildMainPanel(player);
-        refreshHotbar(player);
-        // ?gear=1 auto-opens the equipment modal after a race-swap; the
-        // flag is then stripped from the URL so a refresh doesn't keep
-        // popping the modal.
-        try {
-          const params = new URLSearchParams(window.location.search);
-          if (params.get("gear") === "1") {
-            openEquipmentModal(player);
-            params.delete("gear");
-            const newQs = params.toString();
-            const newUrl = window.location.pathname + (newQs ? "?" + newQs : "")
-              + window.location.hash;
-            window.history.replaceState(null, "", newUrl);
-          }
-        } catch (e) { /* no-op */ }
-        // Refresh hotbar periodically while clips trickle in.
-        let pulses = 0;
-        const tick = setInterval(() => {
-          refreshHotbar(player);
-          if (++pulses > 20) clearInterval(tick);
-        }, 500);
-      });
     } catch (err) {
       console.error("[boot] failed:", err);
       const info = document.querySelector("#info .controls");
@@ -1210,6 +1307,7 @@
         <div class="slot"><span class="key">6</span>&#127869;</div>
         <div class="slot"><span class="key">7</span>&#129482;</div>
         <div class="slot"><span class="key">8</span>&#128137;</div>
+        <div class="slot empty"><span class="key">9</span>&middot;</div>
       </div>
     </div>
   </div>

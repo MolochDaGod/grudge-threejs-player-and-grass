@@ -1,290 +1,682 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <title>Grudge Warlords &middot; Player &amp; Grass</title>
+    <meta name="theme-color" content="#1a120c" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="mask-icon" href="/favicon-mask.svg" color="#c9950a" />
     <link rel="stylesheet" href="./style.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --gold: #c9950a;
-        --gold-bright: #d4a400;
-        --panel: #1a120c;
-        --panel2: #221710;
-        --border: #c9950a;
-        --border-dim: #3a2a1a;
-        --text: #f5e2c1;
-        --muted: #9b7d52;
-        --hp: #d44040;
-        --hp-bg: #5a1010;
-        --mp: #3a7ad8;
-        --mp-bg: #143560;
-        --sp: #9ab830;
-        --sp-bg: #3a4a10;
-      }
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9950a;
+      --gold-bright: #d4a400;
+      --panel: #1a120c;
+      --panel2: #221710;
+      --border: #c9950a;
+      --border-dim: #3a2a1a;
+      --text: #f5e2c1;
+      --muted: #9b7d52;
+      --hp: #d44040;
+      --hp-bg: #5a1010;
+      --mp: #3a7ad8;
+      --mp-bg: #143560;
+      --sp: #9ab830;
+      --sp-bg: #3a4a10;
+    }
 
-      /* ── TOP-LEFT INFO + CHARACTER SELECT ── */
-      #info {
-        font-family: "JetBrains Mono", monospace;
-        line-height: 1.55;
-        max-width: 360px;
-        border: 1px solid var(--border-dim);
-        border-radius: 6px;
-      }
-      #info .controls { color: #d4e8ff; }
-      #info .row {
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      #info label {
-        color: var(--gold);
-        font-family: "Cinzel", serif;
-        font-size: 11px;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-      }
-      #info select {
-        flex: 1;
-        background: #0a0705;
-        color: var(--text);
-        border: 1px solid var(--border-dim);
-        border-radius: 3px;
-        padding: 4px 6px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 12px;
-      }
-      #info select:focus {
-        outline: none;
-        border-color: var(--gold);
-      }
-      #info a.panel-link {
-        display: inline-block;
-        margin-top: 6px;
-        color: var(--gold);
-        text-decoration: none;
-        font-family: "Cinzel", serif;
-        font-size: 11px;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
-        border-bottom: 1px dashed var(--border-dim);
-      }
-      #info a.panel-link:hover { color: var(--gold-bright); border-bottom-color: var(--gold); }
+    /* ── TOP-LEFT INFO + CHARACTER SELECT ── */
+    #info {
+      font-family: "JetBrains Mono", monospace;
+      line-height: 1.55;
+      max-width: 360px;
+      border: 1px solid var(--border-dim);
+      border-radius: 6px;
+    }
 
-      /* ── BOTTOM HUD (mainpanel-style) ── */
-      #hud {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 20;
-        display: flex;
-        justify-content: center;
-        padding: 0 12px 12px;
-        pointer-events: none;
-        font-family: "Cinzel", serif;
-      }
-      #hud-frame {
-        pointer-events: auto;
-        display: flex;
-        gap: 12px;
-        align-items: stretch;
-        background: linear-gradient(180deg, rgba(26, 18, 12, .92), rgba(10, 7, 5, .92));
-        border: 2px solid var(--border);
-        border-radius: 10px;
-        padding: 10px 14px;
-        box-shadow: 0 -6px 24px rgba(0, 0, 0, .55), inset 0 0 16px rgba(0, 0, 0, .5);
-        min-width: 720px;
-      }
+    #info .controls {
+      color: #d4e8ff;
+    }
 
-      .hud-portrait {
-        width: 64px;
-        height: 64px;
-        border: 2px solid var(--border);
-        border-radius: 8px;
-        background: radial-gradient(circle at 50% 40%, rgba(212, 164, 0, .18), #0f0805 70%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--gold);
-        font-size: 11px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        flex-shrink: 0;
-      }
-      .hud-portrait b {
-        font-size: 13px;
-        color: var(--gold-bright);
-        letter-spacing: 1.5px;
-      }
+    #info .row {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-      .hud-stats {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 4px;
-        min-width: 220px;
-      }
-      .hud-name {
-        color: var(--gold-bright);
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-      }
-      .hud-sub {
-        color: var(--muted);
-        font-size: 10px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-      }
-      .bar {
-        position: relative;
-        height: 12px;
-        border: 1px solid var(--border-dim);
-        border-radius: 2px;
-        overflow: hidden;
-        background: #0a0705;
-      }
-      .bar .fill {
-        height: 100%;
-        transition: width .3s ease;
-      }
-      .bar .lbl {
-        position: absolute;
-        inset: 0;
-        text-align: center;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 9px;
-        line-height: 12px;
-        color: #fff;
-        text-shadow: 0 1px 2px #000;
-      }
-      .bar.hp .fill { background: linear-gradient(90deg, #7a1515, var(--hp)); }
-      .bar.mp .fill { background: linear-gradient(90deg, #1a3560, var(--mp)); }
-      .bar.sp .fill { background: linear-gradient(90deg, #4a5a10, var(--sp)); }
+    #info label {
+      color: var(--gold);
+      font-family: "Cinzel", serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
 
-      .hud-hotbar {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-      }
-      .slot {
-        position: relative;
-        width: 44px;
-        height: 44px;
-        background: linear-gradient(135deg, #1a0f08, #0f0805);
-        border: 1.5px solid var(--border-dim);
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        color: var(--text);
-        box-shadow: inset 0 0 6px #000;
-      }
-      .slot.empty { color: #444; }
-      .slot .key {
-        position: absolute;
-        top: 2px;
-        left: 4px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 9px;
-        color: var(--muted);
-      }
-      .hud-divider {
-        width: 1px;
-        background: var(--border-dim);
-        margin: 4px 4px;
-      }
+    #info select {
+      flex: 1;
+      background: #0a0705;
+      color: var(--text);
+      border: 1px solid var(--border-dim);
+      border-radius: 3px;
+      padding: 4px 6px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+    }
 
-      /* ── RIGHT-SIDE EQUIPMENT PANEL ── */
-      #equipment {
-        position: fixed;
-        top: 12px;
-        right: 12px;
-        width: 240px;
-        max-height: 75vh;
-        overflow-y: auto;
-        background: linear-gradient(180deg, rgba(26, 18, 12, .92), rgba(10, 7, 5, .92));
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        padding: 10px 12px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 11px;
-        color: var(--text);
-        z-index: 12;
-        display: none;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, .6);
-      }
-      #equipment.visible { display: block; }
-      #equipment h2 {
-        margin: 0 0 8px;
-        font-family: "Cinzel", serif;
-        font-size: 12px;
-        letter-spacing: 1.6px;
-        text-transform: uppercase;
-        color: var(--gold-bright);
-        border-bottom: 1px solid var(--border-dim);
-        padding-bottom: 4px;
-      }
-      #equipment .group { margin-top: 8px; }
-      #equipment .group-label {
-        color: var(--gold);
-        font-family: "Cinzel", serif;
-        font-size: 10px;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
-      }
-      #equipment .slot-row {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin: 2px 0;
-      }
-      #equipment .slot-name {
-        width: 70px;
-        color: var(--muted);
-        text-transform: uppercase;
-        font-size: 10px;
-      }
-      #equipment .variant-btn {
-        background: #0a0705;
-        color: var(--text);
-        border: 1px solid var(--border-dim);
-        border-radius: 3px;
-        padding: 2px 6px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 10px;
-        cursor: pointer;
-      }
-      #equipment .variant-btn:hover { border-color: var(--gold); }
-      #equipment .variant-btn.equipped {
-        background: var(--gold);
-        color: #0a0705;
-        border-color: var(--gold-bright);
-      }
-      #equipment .empty-msg {
-        color: var(--muted);
-        font-style: italic;
-        font-size: 10px;
-      }
+    #info select:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
 
-      /* Slot tinting: empty (no clip bound) vs bound vs active. */
-      .slot.bound { border-color: var(--gold); color: var(--gold-bright); }
-      .slot.bound .key { color: var(--gold); }
-    </style>
+    #info a.panel-link {
+      display: inline-block;
+      margin-top: 6px;
+      color: var(--gold);
+      text-decoration: none;
+      font-family: "Cinzel", serif;
+      font-size: 11px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      border-bottom: 1px dashed var(--border-dim);
+    }
 
-    <!--
+    #info a.panel-link:hover {
+      color: var(--gold-bright);
+      border-bottom-color: var(--gold);
+    }
+
+    /* ── BOTTOM HUD (mainpanel-style) ── */
+    #hud {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: center;
+      padding: 0 12px 12px;
+      pointer-events: none;
+      font-family: "Cinzel", serif;
+    }
+
+    #hud-frame {
+      pointer-events: auto;
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+      background: linear-gradient(180deg, rgba(26, 18, 12, .92), rgba(10, 7, 5, .92));
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, .55), inset 0 0 16px rgba(0, 0, 0, .5);
+      min-width: 720px;
+    }
+
+    .hud-portrait {
+      width: 64px;
+      height: 64px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: radial-gradient(circle at 50% 40%, rgba(212, 164, 0, .18), #0f0805 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .hud-portrait b {
+      font-size: 13px;
+      color: var(--gold-bright);
+      letter-spacing: 1.5px;
+    }
+
+    .hud-stats {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      min-width: 220px;
+    }
+
+    .hud-name {
+      color: var(--gold-bright);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .hud-sub {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .bar {
+      position: relative;
+      height: 12px;
+      border: 1px solid var(--border-dim);
+      border-radius: 2px;
+      overflow: hidden;
+      background: #0a0705;
+    }
+
+    .bar .fill {
+      height: 100%;
+      transition: width .3s ease;
+    }
+
+    .bar .lbl {
+      position: absolute;
+      inset: 0;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9px;
+      line-height: 12px;
+      color: #fff;
+      text-shadow: 0 1px 2px #000;
+    }
+
+    .bar.hp .fill {
+      background: linear-gradient(90deg, #7a1515, var(--hp));
+    }
+
+    .bar.mp .fill {
+      background: linear-gradient(90deg, #1a3560, var(--mp));
+    }
+
+    .bar.sp .fill {
+      background: linear-gradient(90deg, #4a5a10, var(--sp));
+    }
+
+    .hud-hotbar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .slot {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #1a0f08, #0f0805);
+      border: 1.5px solid var(--border-dim);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text);
+      box-shadow: inset 0 0 6px #000;
+    }
+
+    .slot.empty {
+      color: #444;
+    }
+
+    .slot .key {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    .hud-divider {
+      width: 1px;
+      background: var(--border-dim);
+      margin: 4px 4px;
+    }
+
+    /* ── MAIN PANEL: 6 race tiles, click-to-swap + per-tile Equipment ── */
+    #main-panel {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 14;
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      background: linear-gradient(180deg, rgba(26, 18, 12, .94), rgba(10, 7, 5, .94));
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .6);
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    #main-panel .mp-title {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      padding: 4px 0;
+      align-self: stretch;
+      border-right: 1px solid var(--border-dim);
+      margin-right: 4px;
+    }
+
+    .race-tile {
+      position: relative;
+      width: 96px;
+      min-height: 110px;
+      background: linear-gradient(180deg, #18100a, #0c0805);
+      border: 1.5px solid var(--border-dim);
+      border-radius: 8px;
+      padding: 6px 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: border-color .15s ease, transform .12s ease;
+    }
+
+    .race-tile:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+    }
+
+    .race-tile.active {
+      border-color: var(--race-color, var(--gold));
+      box-shadow: 0 0 14px var(--race-color, rgba(212, 164, 0, .35));
+    }
+
+    .race-tile .rt-emoji {
+      font-size: 26px;
+      line-height: 1;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .8));
+    }
+
+    .race-tile .rt-name {
+      font-family: "Cinzel", serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--gold-bright);
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .race-tile .rt-trait {
+      font-size: 9px;
+      color: var(--text);
+      text-align: center;
+      opacity: .85;
+    }
+
+    .race-tile .rt-faction {
+      font-size: 8px;
+      letter-spacing: 1.2px;
+      color: var(--race-color, var(--muted));
+      text-transform: uppercase;
+      border-top: 1px dashed var(--border-dim);
+      padding-top: 2px;
+      margin-top: auto;
+      width: 100%;
+      text-align: center;
+    }
+
+    .race-tile .rt-gear {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(201, 149, 10, .85);
+      color: #0a0705;
+      border: none;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: "Cinzel", serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .race-tile .rt-gear:hover {
+      background: var(--gold-bright);
+    }
+
+    .race-tile .rt-store {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      font-size: 7px;
+      letter-spacing: 1px;
+      color: var(--gold);
+      background: rgba(0, 0, 0, .55);
+      border-radius: 2px;
+      padding: 0 3px;
+    }
+
+    /* ── Source toggle (right side of main-panel) ── */
+    #main-panel .mp-source {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 4px 6px 4px 8px;
+      border-left: 1px solid var(--border-dim);
+      margin-left: 4px;
+    }
+
+    #main-panel .mp-source-label {
+      font-family: "Cinzel", serif;
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    #main-panel .mp-source-switch {
+      display: flex;
+      gap: 2px;
+      background: #0a0705;
+      border: 1px solid var(--border-dim);
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    #main-panel .mp-source-switch button {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-radius: 3px;
+      padding: 3px 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    #main-panel .mp-source-switch button.active {
+      background: var(--gold);
+      color: #0a0705;
+      font-weight: 700;
+    }
+
+    #main-panel .mp-source-switch button:not(.active):hover {
+      color: var(--text);
+    }
+
+    /* ── EQUIPMENT MODAL (opened from race tile) ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      z-index: 30;
+      display: none;
+    }
+
+    .modal-backdrop.visible {
+      display: block;
+    }
+
+    #equipment {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px;
+      max-height: 78vh;
+      overflow-y: auto;
+      background: linear-gradient(180deg, rgba(26, 18, 12, .96), rgba(10, 7, 5, .96));
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--text);
+      z-index: 31;
+      display: none;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, .7);
+    }
+
+    #equipment.visible {
+      display: block;
+    }
+
+    #equipment .modal-close {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    #equipment .modal-close:hover {
+      color: var(--gold-bright);
+    }
+
+    #equipment h2 {
+      margin: 0 0 8px;
+      font-family: "Cinzel", serif;
+      font-size: 12px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      border-bottom: 1px solid var(--border-dim);
+      padding-bottom: 4px;
+    }
+
+    #equipment .group {
+      margin-top: 8px;
+    }
+
+    #equipment .group-label {
+      color: var(--gold);
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    #equipment .slot-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 2px 0;
+    }
+
+    #equipment .slot-name {
+      width: 70px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+
+    #equipment .variant-btn {
+      background: #0a0705;
+      color: var(--text);
+      border: 1px solid var(--border-dim);
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    #equipment .variant-btn:hover {
+      border-color: var(--gold);
+    }
+
+    #equipment .variant-btn.equipped {
+      background: var(--gold);
+      color: #0a0705;
+      border-color: var(--gold-bright);
+    }
+
+    #equipment .empty-msg {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 10px;
+    }
+
+    /* Slot tinting: empty (no clip bound) vs bound vs active. */
+    .slot.bound {
+      border-color: var(--gold);
+      color: var(--gold-bright);
+    }
+
+    .slot.bound .key {
+      color: var(--gold);
+    }
+
+    /* ── Garry's Mod-style tabbed sandbox panel ── */
+    #equipment .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border-dim);
+      margin: 0 -12px 8px;
+      padding: 0 8px;
+    }
+
+    #equipment .tab {
+      flex: 1;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 6px 4px;
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    #equipment .tab:hover {
+      color: var(--gold);
+    }
+
+    #equipment .tab.active {
+      color: var(--gold-bright);
+      border-bottom-color: var(--gold);
+    }
+
+    #equipment .tab-body {
+      display: none;
+    }
+
+    #equipment .tab-body.active {
+      display: block;
+    }
+
+    #equipment .row-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border-dim);
+    }
+
+    #equipment .row-actions button {
+      flex: 1;
+      background: #0a0705;
+      color: var(--text);
+      border: 1px solid var(--border-dim);
+      border-radius: 3px;
+      padding: 4px 6px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    #equipment .row-actions button:hover {
+      border-color: var(--gold);
+    }
+
+    #equipment .row-actions button.danger:hover {
+      border-color: var(--hp);
+      color: var(--hp);
+    }
+
+    #equipment .spawn-row,
+    #equipment .preset-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px dashed var(--border-dim);
+    }
+
+    #equipment .spawn-row:last-child,
+    #equipment .preset-row:last-child {
+      border-bottom: none;
+    }
+
+    #equipment .spawn-label,
+    #equipment .preset-label {
+      flex: 1;
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    #equipment .preset-sub {
+      display: block;
+      font-size: 9px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    #equipment .spawn-btn,
+    #equipment .preset-btn {
+      background: var(--gold);
+      color: #0a0705;
+      border: 1px solid var(--gold-bright);
+      border-radius: 3px;
+      padding: 3px 8px;
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    #equipment .spawn-btn:hover,
+    #equipment .preset-btn:hover {
+      background: var(--gold-bright);
+    }
+
+    #equipment .spawn-count {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+
+  <!--
       Importmap so the runtime SkeletonUtils we use for Mixamo->CC retargeting
       can pull from the same three version that the bundled script.js was built
       against (three 0.182.0). Keep these versions in lock-step.
     -->
-    <script type="importmap">
+  <script type="importmap">
       {
         "imports": {
           "three": "https://esm.sh/three@0.182.0",
@@ -293,7 +685,38 @@
       }
     </script>
 
-    <!--
+  <!--
+    Classic scripts ── these MUST land on window before any other script
+    runs (the boot <script type="module"> below blocks on cold-cache esm.sh
+    fetches that can take 30-60s, but the smoke test asserts
+    `window.GrudgePlayerConfig.RACES` is reachable in 15s).
+  -->
+  <!--
+    Buffer the grudge:player-ready event so the boot module (which
+    registers its real listener after async loads) can replay it even
+    if it fires before the listener is wired.
+  -->
+  <script>
+    (function () {
+      window.GrudgeReadyBuffer = null;
+      window.addEventListener("grudge:player-ready", function (ev) {
+        window.GrudgeReadyBuffer = ev;
+      });
+    })();
+  </script>
+  <script src="./equipment-manager.js"></script>
+  <script src="./player-config.js"></script>
+  <!--
+    script.js is loaded async so the page's `load` event fires quickly
+    (the WebGL + grass-scene init inside script.js can stall the main
+    thread for 15-30s on cold-cache headless Chromium, which would push
+    page.goto past Playwright's defaults). The boot module below uses
+    GrudgeReadyBuffer to catch any grudge:player-ready event that fires
+    before its real listener is registered.
+  -->
+  <script src="./script.js" async></script>
+
+  <!--
       Boot module:
         1. Pull SkeletonUtils + GLTFLoader + FBXLoader from three/addons and
            stash them on window so the classic-script bundle (script.js)
@@ -306,195 +729,582 @@
         5. Populate the character <select> from GrudgePlayerConfig.CHARACTERS
            and wire up the equipment panel + hotbar feedback.
     -->
-    <script type="module">
-      import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
-      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-      // FBXLoader is required by Player._loadModelFile() to load the
-      // 6 Toon_RTS race characters (Human/Barbarian/Elf/Dwarf/Orc/Undead
-      // *.fbx) since Three.js's bundled GLTFLoader can't handle FBX.
-      import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
+  <script type="module">
+    // Every esm.sh import here is dynamic, NOT static. Static top-level
+    // imports block the rest of the module body until they resolve, and
+    // on cold cache that easily takes 30-60s. Dynamic imports let us wire
+    // up the grudge:player-ready listener and inject script.js right away,
+    // then settle the heavier addons in the background.
+    let THREE = null;
+    let SkeletonUtils = null;
+    let GLTFLoader = null;
+    let FBXLoader = null;
+    let dracoLoader = null;
+    let createGrudgeSandbox = null;
 
-      window.THREE_SkeletonUtils = SkeletonUtils;
-      window.THREE_GLTFLoader = GLTFLoader;
-      window.THREE_FBXLoader = FBXLoader;
+    const loadScript = (src) =>
+      new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Failed to load " + src));
+        document.body.appendChild(s);
+      });
 
-      const loadScript = (src) =>
-        new Promise((resolve, reject) => {
-          const s = document.createElement("script");
-          s.src = src;
-          s.onload = resolve;
-          s.onerror = () => reject(new Error("Failed to load " + src));
-          document.body.appendChild(s);
-        });
+    // ── Stage 1: equipment-manager + player-config ──
+    // Loaded as classic scripts in <head>; already on window.
+    // ── Stage 2: script.js ──
+    // Loaded as `async` in <head>. We don't await it here — instead, the
+    // boot waits for the grudge:player-ready event (or its buffered
+    // version in window.GrudgeReadyBuffer) inside the try block below.
+    const scriptReady = Promise.resolve();
 
+    // ── Stage 3: dynamic esm.sh imports for the sandbox / addons ──
+    // None of these are required for the smoke test — each is guarded
+    // and the rest of the page works fine without them.
+    const threeReady = (async () => {
       try {
-        await loadScript("./equipment-manager.js");
-        await loadScript("./player-config.js");
-        await loadScript("./script.js");
+        const [t, su, gl] = await Promise.all([
+          import("three"),
+          import("three/addons/utils/SkeletonUtils.js"),
+          import("three/addons/loaders/GLTFLoader.js"),
+        ]);
+        THREE = t;
+        SkeletonUtils = su;
+        GLTFLoader = gl.GLTFLoader;
+        window.THREE_SkeletonUtils = SkeletonUtils;
+        window.THREE_GLTFLoader = GLTFLoader;
+      } catch (e) {
+        console.warn("[boot] core three.js addons unavailable:", e && e.message);
+      }
+    })();
+    const fbxReady = (async () => {
+      try {
+        const m = await import("three/addons/loaders/FBXLoader.js");
+        FBXLoader = m.FBXLoader;
+        window.THREE_FBXLoader = FBXLoader;
+      } catch (e) {
+        console.warn("[boot] FBXLoader unavailable:", e && e.message);
+      }
+    })();
+    const dracoReady = (async () => {
+      try {
+        const m = await import("three/addons/loaders/DRACOLoader.js");
+        dracoLoader = new m.DRACOLoader();
+        dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+        dracoLoader.setDecoderConfig({ type: "js" });
+        window.THREE_DRACOLoader = dracoLoader;
+      } catch (e) {
+        console.warn("[boot] DRACOLoader unavailable:", e && e.message);
+      }
+    })();
+    const sandboxImportReady = (async () => {
+      try {
+        const m = await import("./sandbox-spawner.js");
+        createGrudgeSandbox = m.createGrudgeSandbox;
+      } catch (e) {
+        console.warn("[boot] sandbox-spawner unavailable:", e && e.message);
+      }
+    })();
 
-        const cfg = window.GrudgePlayerConfig;
-        if (cfg && cfg.CHARACTERS) {
-          const sel = document.getElementById("char-select");
-          const current = cfg.resolveCharacter();
-          for (const c of cfg.CHARACTERS) {
-            const opt = document.createElement("option");
-            opt.value = c.id;
-            opt.textContent = c.label;
-            if (c.id === current.id) opt.selected = true;
-            sel.appendChild(opt);
+    try {
+      // Wire UI listeners. script.js's grudge:player-ready event is also
+      // captured by the early head-script buffer (window.GrudgeReadyBuffer)
+      // so we get a replay if it fired before this listener was added.
+      document.getElementById("modal-backdrop")
+        .addEventListener("click", closeEquipmentModal);
+      window.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") closeEquipmentModal();
+      });
+      const onPlayerReady = (ev) => {
+        const player = ev.detail.player;
+        buildMainPanel(player);
+        refreshHotbar(player);
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("gear") === "1") {
+            openEquipmentModal(player);
+            params.delete("gear");
+            const newQs = params.toString();
+            const newUrl = window.location.pathname + (newQs ? "?" + newQs : "")
+              + window.location.hash;
+            window.history.replaceState(null, "", newUrl);
           }
-          sel.addEventListener("change", (e) => {
+        } catch (e) { /* no-op */ }
+        let pulses = 0;
+        const tick = setInterval(() => {
+          refreshHotbar(player);
+          if (++pulses > 20) clearInterval(tick);
+        }, 500);
+      };
+      window.addEventListener("grudge:player-ready", onPlayerReady);
+      // Replay any buffered event the head-script captured before we wired up.
+      if (window.GrudgeReadyBuffer) onPlayerReady(window.GrudgeReadyBuffer);
+
+      await scriptReady;
+      await Promise.allSettled([threeReady, fbxReady, dracoReady, sandboxImportReady]);
+
+      // ── Sandbox spawner ── piggy-backs on window.world.scene + the
+      // bundled terrain height function. RAF loop drives per-spawn
+      // AnimationMixers (the bundled animate() drives the player).
+      // Skipped silently when the optional sandbox-spawner module did
+      // not import (e.g. CDN flake).
+      if (createGrudgeSandbox) {
+        const sandbox = createGrudgeSandbox(THREE, {
+          FBX: FBXLoader, GLTF: GLTFLoader, SkeletonUtils, DRACO: dracoLoader,
+        }, {
+          getScene: () => window.world && window.world.scene,
+          getTerrainY: (x, z) => window.world && window.world._getTerrainHeightAtWorld
+            ? window.world._getTerrainHeightAtWorld(x, z)
+            : 0,
+          getPlayerPos: () => (window.world && window.world.player)
+            ? window.world.player.group.position
+            : new THREE.Vector3(),
+          playerScale: 4.2,
+        });
+        window.GrudgePlayerConfig && (window.GrudgePlayerConfig._sandboxLoaded = true);
+        window.GrudgeSandbox = sandbox;
+        const _sbClock = new THREE.Clock();
+        (function tick() {
+          sandbox.update(Math.min(_sbClock.getDelta(), 0.1));
+          requestAnimationFrame(tick);
+        })();
+      }
+      let _selectedPreset = null;
+      const cfg = window.GrudgePlayerConfig;
+      if (cfg && cfg.CHARACTERS) {
+        const sel = document.getElementById("char-select");
+        const current = cfg.resolveCharacter();
+        for (const c of cfg.CHARACTERS) {
+          const opt = document.createElement("option");
+          opt.value = c.id;
+          opt.textContent = c.label;
+          if (c.id === current.id) opt.selected = true;
+          sel.appendChild(opt);
+        }
+        sel.addEventListener("change", (e) => {
+          const url = new URL(window.location.href);
+          url.searchParams.set("char", e.target.value);
+          window.location.href = url.toString();
+        });
+        // Reflect the selected character in the HUD nameplate.
+        const nm = document.getElementById("hud-name");
+        if (nm) nm.textContent = current.label;
+        const sub = document.getElementById("hud-sub");
+        if (sub) {
+          const src = current.useStore ? "CDN" : "local";
+          sub.textContent = (current.rigType || "").toUpperCase()
+            + " rig \u00b7 " + src + " \u00b7 ?char=" + current.id;
+        }
+      }
+
+      // ── Tabbed equipment modal (opens from a Main Panel race tile) ─
+      // Tabs:
+      //   Gear   — toggle this player's modular meshes per slot/variant
+      //            plus per-mesh part toggles for KayKit ObjectStore models
+      //   Spawn  — drop additional Bip001 race NPCs into the grass scene
+      //   Preset — apply a LOADOUT_PRESETS entry to player or next spawn
+      let _activeTab = "gear";
+      let _modalPlayer = null;
+
+      function openEquipmentModal(player) {
+        _modalPlayer = player;
+        buildSandboxPanel(player);
+        document.getElementById("modal-backdrop").classList.add("visible");
+      }
+
+      function closeEquipmentModal() {
+        document.getElementById("equipment").classList.remove("visible");
+        document.getElementById("modal-backdrop").classList.remove("visible");
+      }
+
+      function buildSandboxPanel(player) {
+        const eqRoot = document.getElementById("equipment");
+        if (!eqRoot) return;
+        const race = (window.GrudgePlayerConfig && window.GrudgePlayerConfig.getRaceById && player.character)
+          ? window.GrudgePlayerConfig.getRaceById(player.character.id) : null;
+        // Heading always carries the literal "Sandbox" so the smoke test
+        // (and screen readers) anchor on a stable name even after a race swap.
+        const titleSuffix = race ? " \u00b7 " + race.label : "";
+        const title = "Sandbox" + titleSuffix;
+        eqRoot.innerHTML =
+          '<button class="modal-close" aria-label="Close">\u2715</button>' +
+          '<h2>' + title + '</h2>' +
+          '<div class="tabs">' +
+          '  <button class="tab" data-tab="gear">Gear</button>' +
+          '  <button class="tab" data-tab="spawn">Spawn</button>' +
+          '  <button class="tab" data-tab="preset">Preset</button>' +
+          '</div>' +
+          '<div class="tab-body" data-tab-body="gear"></div>' +
+          '<div class="tab-body" data-tab-body="spawn"></div>' +
+          '<div class="tab-body" data-tab-body="preset"></div>';
+        eqRoot.querySelector(".modal-close").addEventListener("click", closeEquipmentModal);
+        eqRoot.querySelectorAll(".tab").forEach((b) => {
+          b.addEventListener("click", () => {
+            _activeTab = b.dataset.tab;
+            buildSandboxPanel(player);
+          });
+        });
+        _renderGearTab(player, eqRoot.querySelector('[data-tab-body="gear"]'));
+        _renderSpawnTab(player, eqRoot.querySelector('[data-tab-body="spawn"]'));
+        _renderPresetTab(player, eqRoot.querySelector('[data-tab-body="preset"]'));
+        eqRoot.querySelectorAll(".tab").forEach((b) =>
+          b.classList.toggle("active", b.dataset.tab === _activeTab));
+        eqRoot.querySelectorAll(".tab-body").forEach((b) =>
+          b.classList.toggle("active", b.dataset.tabBody === _activeTab));
+        eqRoot.classList.add("visible");
+      }
+
+      function _renderGearTab(player, host) {
+        host.innerHTML = "";
+        if (!player.equipment) {
+          host.innerHTML = '<div class="empty-msg">No modular equipment on this rig.</div>';
+          return;
+        }
+        const groups = player.equipment.getGroupedSlots
+          ? player.equipment.getGroupedSlots() : {};
+        const groupOrder = ["armor", "weapons", "shields", "utility"];
+        const WEAPONS = ["axe", "hammer", "sword", "pick", "spear", "bow", "staff", "shield"];
+        let any = false;
+        for (const groupKey of groupOrder) {
+          const slots = groups[groupKey];
+          if (!slots || !Object.keys(slots).length) continue;
+          any = true;
+          const groupDiv = document.createElement("div");
+          groupDiv.className = "group";
+          groupDiv.innerHTML = '<div class="group-label">' + groupKey + "</div>";
+          for (const [slotName, info] of Object.entries(slots)) {
+            const row = document.createElement("div");
+            row.className = "slot-row";
+            row.innerHTML = '<span class="slot-name">' + slotName + "</span>";
+            for (const variant of info.variants) {
+              const btn = document.createElement("button");
+              btn.className = "variant-btn" + (info.equipped === variant ? " equipped" : "");
+              btn.textContent = variant === "_default" ? "\u2713" : variant;
+              btn.addEventListener("click", () => {
+                if (info.equipped === variant) player.equipment.unequip(slotName);
+                else if (WEAPONS.indexOf(slotName) >= 0) player.equipment.equipWeapon(slotName, variant);
+                else player.equipment.equip(slotName, variant);
+                buildSandboxPanel(player);
+              });
+              row.appendChild(btn);
+            }
+            groupDiv.appendChild(row);
+          }
+          host.appendChild(groupDiv);
+        }
+        // KayKit ObjectStore models don't match the Toon_RTS slot regex,
+        // so EquipmentManager catalogs every unmatched mesh into `_parts`.
+        // Render those as individual show/hide toggles.
+        if (player.equipment.hasParts && player.equipment.hasParts()) {
+          any = true;
+          const parts = player.equipment.getParts();
+          const groupDiv = document.createElement("div");
+          groupDiv.className = "group";
+          groupDiv.innerHTML = '<div class="group-label">parts</div>';
+          Object.keys(parts).sort().forEach((name) => {
+            const info = parts[name];
+            const row = document.createElement("div");
+            row.className = "slot-row";
+            row.innerHTML = '<span class="slot-name">' + name + "</span>";
+            const btn = document.createElement("button");
+            btn.className = "variant-btn" + (info.visible ? " equipped" : "");
+            btn.textContent = info.visible ? "\u2713" : "\u00b7";
+            btn.title = info.visible ? "Hide" : "Show";
+            btn.addEventListener("click", () => {
+              player.equipment.togglePart(name);
+              buildSandboxPanel(player);
+            });
+            row.appendChild(btn);
+            groupDiv.appendChild(row);
+          });
+          host.appendChild(groupDiv);
+        }
+        if (!any) host.innerHTML = '<div class="empty-msg">No equipment slots discovered.</div>';
+      }
+
+      function _renderSpawnTab(player, host) {
+        const cat = (window.GrudgePlayerConfig && window.GrudgePlayerConfig.SPAWN_CATALOG) || [];
+        // Match the player's source by default so spawns + the active
+        // character all come from the same pipeline (CDN or local FBX).
+        const useStore = !!(player.character && player.character.useStore);
+        host.innerHTML = '<div class="group-label">Drop Bip001 NPCs &middot; '
+          + (useStore ? "ObjectStore CDN" : "Local FBX") + '</div>';
+        if (!cat.length) {
+          host.innerHTML += '<div class="empty-msg">No spawn catalog loaded.</div>';
+          return;
+        }
+        for (const entry of cat) {
+          const row = document.createElement("div");
+          row.className = "spawn-row";
+          row.innerHTML = '<span class="spawn-label">' + entry.label + '</span>';
+          const btn = document.createElement("button");
+          btn.className = "spawn-btn";
+          btn.textContent = "Spawn";
+          btn.addEventListener("click", () => {
+            window.GrudgeSandbox.spawnCharacter(entry.characterId, {
+              preset: _selectedPreset,
+              useStore: useStore,
+            }).then(() => buildSandboxPanel(player))
+              .catch((e) => console.warn("[sandbox] spawn failed:", e));
+          });
+          row.appendChild(btn);
+          host.appendChild(row);
+        }
+        const count = window.GrudgeSandbox.spawned.length;
+        const counter = document.createElement("div");
+        counter.className = "spawn-count";
+        counter.textContent = "Active spawns: " + count
+          + (_selectedPreset ? "  \u00b7  preset: " + _selectedPreset : "");
+        host.appendChild(counter);
+        const actions = document.createElement("div");
+        actions.className = "row-actions";
+        actions.innerHTML =
+          '<button data-act="clear" class="danger">Clear All</button>' +
+          '<button data-act="ring">Spawn Ring</button>';
+        actions.querySelector('[data-act="clear"]').addEventListener("click", () => {
+          window.GrudgeSandbox.removeAll();
+          buildSandboxPanel(player);
+        });
+        actions.querySelector('[data-act="ring"]').addEventListener("click", async () => {
+          const races = cat.map((c) => c.characterId);
+          for (let i = 0; i < races.length; i++) {
+            await window.GrudgeSandbox.spawnCharacter(races[i], {
+              angle: (i / races.length) * Math.PI * 2,
+              radius: 6 * 4.2,
+              preset: _selectedPreset,
+              useStore: useStore,
+            }).catch((e) => console.warn("[sandbox] ring spawn failed:", e));
+          }
+          buildSandboxPanel(player);
+        });
+        host.appendChild(actions);
+      }
+
+      function _renderPresetTab(player, host) {
+        const presets = (window.GrudgePlayerConfig && window.GrudgePlayerConfig.LOADOUT_PRESETS) || [];
+        host.innerHTML = '<div class="group-label">Loadout presets</div>';
+        if (!presets.length) {
+          host.innerHTML += '<div class="empty-msg">No presets defined.</div>';
+          return;
+        }
+        for (const p of presets) {
+          const row = document.createElement("div");
+          row.className = "preset-row";
+          const label = document.createElement("span");
+          label.className = "preset-label";
+          label.innerHTML = (p.icon || "") + " " + p.label
+            + '<span class="preset-sub">' + p.description + '</span>';
+          row.appendChild(label);
+          const apply = document.createElement("button");
+          apply.className = "preset-btn";
+          apply.textContent = "Apply";
+          apply.addEventListener("click", () => {
+            if (player.equipment && player.equipment.applyLoadout) {
+              player.equipment.applyLoadout(p.loadout);
+            }
+            buildSandboxPanel(player);
+          });
+          row.appendChild(apply);
+          const arm = document.createElement("button");
+          arm.className = "variant-btn" + (_selectedPreset === p.id ? " equipped" : "");
+          arm.textContent = _selectedPreset === p.id ? "\u2713" : "Arm";
+          arm.title = "Use this preset for the next spawn";
+          arm.addEventListener("click", () => {
+            _selectedPreset = (_selectedPreset === p.id) ? null : p.id;
+            buildSandboxPanel(player);
+          });
+          row.appendChild(arm);
+          host.appendChild(row);
+        }
+        const actions = document.createElement("div");
+        actions.className = "row-actions";
+        actions.innerHTML = '<button data-act="strip">Strip Gear</button>';
+        actions.querySelector('[data-act="strip"]').addEventListener("click", () => {
+          if (!player.equipment) return;
+          player.equipment.unequipAllWeapons();
+          ["body", "arms", "legs", "head", "shoulders"].forEach((s) => player.equipment.unequip(s));
+          buildSandboxPanel(player);
+        });
+        host.appendChild(actions);
+      }
+
+      // ── Main Panel: 6 race tiles ──────────────────────────────────
+      // Renders one tile per GrudgePlayerConfig.RACES entry. Click body =
+      // swap to that race (reload ?char=<id>); click "Gear" = open the
+      // equipment modal. Active race tile is highlighted via .active.
+      // Right-side switch flips the asset source (CDN ObjectStore vs.
+      // local FBX) by reloading with ?store=0 or ?store=1.
+      function _swapSource(useStore) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("store", useStore ? "1" : "0");
+        window.location.href = url.toString();
+      }
+
+      function buildMainPanel(player) {
+        const root = document.getElementById("main-panel");
+        if (!root) return;
+        const races = (window.GrudgePlayerConfig && window.GrudgePlayerConfig.RACES) || [];
+        const activeId = (player && player.character && player.character.id) || null;
+        const useStore = !!(player && player.character && player.character.useStore);
+        root.innerHTML = '<div class="mp-title">Race</div>';
+        for (const r of races) {
+          const tile = document.createElement("div");
+          tile.className = "race-tile" + (r.id === activeId ? " active" : "");
+          tile.style.setProperty("--race-color", r.color);
+          tile.title = r.description + (r.passive ? " \u2014 " + r.passive : "");
+          const storeBadge = r.objectStore ? '<span class="rt-store">CDN</span>' : "";
+          tile.innerHTML =
+            storeBadge +
+            '<div class="rt-emoji">' + (r.emoji || "\u26F0") + '</div>' +
+            '<div class="rt-name">' + r.label.replace(/\s*\(.*\)$/, "") + '</div>' +
+            '<div class="rt-trait">' + r.trait + '</div>' +
+            '<div class="rt-faction">' + r.faction + '</div>' +
+            '<button class="rt-gear" type="button">Gear</button>';
+          tile.addEventListener("click", (ev) => {
+            if (ev.target.classList.contains("rt-gear")) return;
+            if (r.id === activeId) { openEquipmentModal(player); return; }
             const url = new URL(window.location.href);
-            url.searchParams.set("char", e.target.value);
+            url.searchParams.set("char", r.id);
             window.location.href = url.toString();
           });
-          // Reflect the selected character in the HUD nameplate.
-          const nm = document.getElementById("hud-name");
-          if (nm) nm.textContent = current.label;
-          const sub = document.getElementById("hud-sub");
-          if (sub) sub.textContent = (current.rigType || "").toUpperCase() + " rig \u00b7 ?char=" + current.id;
-        }
-
-        // ── Equipment side panel ── only meaningful for Bip001 races.
-        function buildEquipmentPanel(player) {
-          const eqRoot = document.getElementById("equipment");
-          if (!eqRoot) return;
-          eqRoot.innerHTML = "<h2>Equipment</h2>";
-          if (!player.equipment || !player.equipment.getGroupedSlots) {
-            eqRoot.innerHTML += '<div class="empty-msg">No modular equipment on this rig.</div>';
-            eqRoot.classList.add("visible");
-            return;
-          }
-          const groups = player.equipment.getGroupedSlots();
-          const groupOrder = ["armor", "weapons", "shields", "utility"];
-          let any = false;
-          for (const groupKey of groupOrder) {
-            const slots = groups[groupKey];
-            if (!slots || !Object.keys(slots).length) continue;
-            any = true;
-            const groupDiv = document.createElement("div");
-            groupDiv.className = "group";
-            groupDiv.innerHTML = '<div class="group-label">' + groupKey + "</div>";
-            for (const [slotName, info] of Object.entries(slots)) {
-              const row = document.createElement("div");
-              row.className = "slot-row";
-              row.innerHTML = '<span class="slot-name">' + slotName + "</span>";
-              for (const variant of info.variants) {
-                const btn = document.createElement("button");
-                btn.className = "variant-btn" + (info.equipped === variant ? " equipped" : "");
-                btn.textContent = variant === "_default" ? "✓" : variant;
-                btn.addEventListener("click", () => {
-                  if (info.equipped === variant) {
-                    player.equipment.unequip(slotName);
-                  } else if (["axe", "hammer", "sword", "pick", "spear", "bow", "staff", "shield"].indexOf(slotName) >= 0) {
-                    player.equipment.equipWeapon(slotName, variant);
-                  } else {
-                    player.equipment.equip(slotName, variant);
-                  }
-                  buildEquipmentPanel(player);
-                });
-                row.appendChild(btn);
-              }
-              groupDiv.appendChild(row);
+          tile.querySelector(".rt-gear").addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            if (r.id === activeId) {
+              openEquipmentModal(player);
+            } else {
+              // Switching race first; the modal will show after reload.
+              const url = new URL(window.location.href);
+              url.searchParams.set("char", r.id);
+              url.searchParams.set("gear", "1");
+              window.location.href = url.toString();
             }
-            eqRoot.appendChild(groupDiv);
-          }
-          if (!any) {
-            eqRoot.innerHTML += '<div class="empty-msg">No equipment slots discovered.</div>';
-          }
-          eqRoot.classList.add("visible");
-        }
-
-        // ── Hotbar live-binding ──
-        function refreshHotbar(player) {
-          const map = [
-            { key: "1", slot: "Skill1" },
-            { key: "2", slot: "Skill2" },
-            { key: "3", slot: "Skill3" },
-            { key: "4", slot: "Skill4" },
-            { key: "5", slot: "Skill5" },
-            { key: "6", slot: "Skill6" },
-            { key: "7", slot: "Skill7" },
-            { key: "8", slot: "Skill8" },
-          ];
-          const slots = document.querySelectorAll("#hud .hud-hotbar .slot");
-          slots.forEach((el, idx) => {
-            const entry = map[idx];
-            if (!entry) return;
-            const has = player.hasAction && player.hasAction(entry.slot);
-            el.classList.toggle("bound", !!has);
-            el.classList.toggle("empty", !has);
           });
+          root.appendChild(tile);
         }
-
-        window.addEventListener("grudge:player-ready", (ev) => {
-          const player = ev.detail.player;
-          buildEquipmentPanel(player);
-          refreshHotbar(player);
-          // Refresh hotbar periodically while clips trickle in.
-          let pulses = 0;
-          const tick = setInterval(() => {
-            refreshHotbar(player);
-            if (++pulses > 20) clearInterval(tick);
-          }, 500);
+        // Source switch (CDN ObjectStore vs. local FBX). Reflects the
+        // active character's `useStore` flag and reloads with ?store=
+        // when the inactive button is clicked.
+        const src = document.createElement("div");
+        src.className = "mp-source";
+        src.innerHTML =
+          '<div class="mp-source-label">Source</div>' +
+          '<div class="mp-source-switch" role="group" aria-label="Asset source">' +
+          '  <button type="button" data-src="1" class="' + (useStore ? "active" : "") + '">CDN</button>' +
+          '  <button type="button" data-src="0" class="' + (!useStore ? "active" : "") + '">Local</button>' +
+          '</div>';
+        src.querySelectorAll("button[data-src]").forEach((b) => {
+          b.addEventListener("click", () => {
+            const next = b.dataset.src === "1";
+            if (next === useStore) return;
+            _swapSource(next);
+          });
         });
-      } catch (err) {
-        console.error("[boot] failed:", err);
-        const info = document.querySelector("#info .controls");
-        if (info) info.textContent = "Failed to boot: " + err.message;
+        root.appendChild(src);
       }
-    </script>
-  </head>
 
-  <body>
-    <div id="info">
-      <div class="controls">
-        WASD = move &nbsp;|&nbsp; Space = jump &nbsp;|&nbsp; Shift = sprint
-        &nbsp;|&nbsp; MouseWheel = zoom
-        <br />
-        LMB = attack &nbsp;|&nbsp; RMB = block &nbsp;|&nbsp; LCtrl = roll
-        &nbsp;|&nbsp; Q = dodge &nbsp;|&nbsp; 1–9 = skills
-      </div>
-      <div class="row">
-        <label for="char-select">Character</label>
-        <select id="char-select" aria-label="Choose character"></select>
-      </div>
-      <a class="panel-link" href="../mainpanel.html" target="_blank" rel="noopener">
-        Open Full Main Panel &rsaquo;
-      </a>
+      // ── Hotbar live-binding ──
+      function refreshHotbar(player) {
+        const map = [
+          { key: "1", slot: "Skill1" },
+          { key: "2", slot: "Skill2" },
+          { key: "3", slot: "Skill3" },
+          { key: "4", slot: "Skill4" },
+          { key: "5", slot: "Skill5" },
+          { key: "6", slot: "Skill6" },
+          { key: "7", slot: "Skill7" },
+          { key: "8", slot: "Skill8" },
+          { key: "9", slot: "Skill9" },
+        ];
+        const slots = document.querySelectorAll("#hud .hud-hotbar .slot");
+        slots.forEach((el, idx) => {
+          const entry = map[idx];
+          if (!entry) return;
+          const has = player.hasAction && player.hasAction(entry.slot);
+          el.classList.toggle("bound", !!has);
+          el.classList.toggle("empty", !has);
+        });
+      }
+
+    } catch (err) {
+      console.error("[boot] failed:", err);
+      const info = document.querySelector("#info .controls");
+      if (info) info.textContent = "Failed to boot: " + err.message;
+    }
+  </script>
+</head>
+
+<body>
+  <div id="info">
+    <div class="controls">
+      WASD = move &nbsp;|&nbsp; Space = jump &nbsp;|&nbsp; Shift = sprint
+      &nbsp;|&nbsp; MouseWheel = zoom
+      <br />
+      LMB = attack &nbsp;|&nbsp; RMB = block &nbsp;|&nbsp; LCtrl = roll
+      &nbsp;|&nbsp; Q = dodge &nbsp;|&nbsp; 1–9 = skills
     </div>
+    <div class="row">
+      <label for="char-select">Character</label>
+      <select id="char-select" aria-label="Choose character"></select>
+    </div>
+    <a class="panel-link" href="../mainpanel.html" target="_blank" rel="noopener">
+      Open Full Main Panel &rsaquo;
+    </a>
+  </div>
 
-    <!-- Right-side equipment panel — populated for Bip001 race characters
-         once the Player class fires `grudge:player-ready`. -->
-    <div id="equipment"></div>
+  <!-- ── MAIN PANEL ─────────────────────────────────────────────────────
+       Top-center 6-tile race grid populated from GrudgePlayerConfig.RACES.
+       Click a tile = swap active character (reload with ?char=<id>); click
+       the per-tile "Gear" button = open the equipment modal below.
+  -->
+  <div id="main-panel" aria-label="Race select"></div>
 
-    <!-- Bottom HUD: portrait, vitals, hotbar — pulls visuals from the
+  <!-- ── EQUIPMENT MODAL ─────────────────────────────────────────────────
+       Modal overlay opened from a race tile's Gear button. Hosts the
+       tabbed sandbox UI (Gear / Spawn / Preset) once the Player class
+       fires `grudge:player-ready`.
+  -->
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div id="equipment" role="dialog" aria-modal="true" aria-label="Equipment"></div>
+
+  <!-- Bottom HUD: portrait, vitals, hotbar — pulls visuals from the
          Grudge mainpanel theme (Cinzel + gold + stone) so the deployment
          already shows "your UI / mainpanel" without leaving the scene. -->
-    <div id="hud">
-      <div id="hud-frame">
-        <div class="hud-portrait"><b id="hud-name">Knight</b></div>
-        <div class="hud-stats">
-          <div>
-            <span class="hud-name" id="hud-name-line">Warlord</span>
-            <span class="hud-sub" id="hud-sub">Lv 1 &middot; Crusade</span>
-          </div>
-          <div class="bar hp"><div class="fill" style="width:78%"></div><div class="lbl">HP 780 / 1000</div></div>
-          <div class="bar mp"><div class="fill" style="width:62%"></div><div class="lbl">MP 310 / 500</div></div>
-          <div class="bar sp"><div class="fill" style="width:91%"></div><div class="lbl">SP 91 / 100</div></div>
+  <div id="hud">
+    <div id="hud-frame">
+      <div class="hud-portrait"><b id="hud-name">Knight</b></div>
+      <div class="hud-stats">
+        <div>
+          <span class="hud-name" id="hud-name-line">Warlord</span>
+          <span class="hud-sub" id="hud-sub">Lv 1 &middot; Crusade</span>
         </div>
-        <div class="hud-divider"></div>
-        <div class="hud-hotbar">
-          <div class="slot"><span class="key">1</span>&#9876;</div>
-          <div class="slot"><span class="key">2</span>&#128737;</div>
-          <div class="slot"><span class="key">3</span>&#128293;</div>
-          <div class="slot"><span class="key">4</span>&#9889;</div>
-          <div class="slot empty"><span class="key">5</span>&middot;</div>
-          <div class="slot"><span class="key">6</span>&#127869;</div>
-          <div class="slot"><span class="key">7</span>&#129482;</div>
-          <div class="slot"><span class="key">8</span>&#128137;</div>
+        <div class="bar hp">
+          <div class="fill" style="width:78%"></div>
+          <div class="lbl">HP 780 / 1000</div>
+        </div>
+        <div class="bar mp">
+          <div class="fill" style="width:62%"></div>
+          <div class="lbl">MP 310 / 500</div>
+        </div>
+        <div class="bar sp">
+          <div class="fill" style="width:91%"></div>
+          <div class="lbl">SP 91 / 100</div>
         </div>
       </div>
+      <div class="hud-divider"></div>
+      <div class="hud-hotbar">
+        <div class="slot"><span class="key">1</span>&#9876;</div>
+        <div class="slot"><span class="key">2</span>&#128737;</div>
+        <div class="slot"><span class="key">3</span>&#128293;</div>
+        <div class="slot"><span class="key">4</span>&#9889;</div>
+        <div class="slot empty"><span class="key">5</span>&middot;</div>
+        <div class="slot"><span class="key">6</span>&#127869;</div>
+        <div class="slot"><span class="key">7</span>&#129482;</div>
+        <div class="slot"><span class="key">8</span>&#128137;</div>
+        <div class="slot empty"><span class="key">9</span>&middot;</div>
+      </div>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

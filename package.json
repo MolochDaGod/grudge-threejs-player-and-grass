@@ -6,6 +6,8 @@
   "description": "Three.js player + grass scene wired up to load Grudge Studio race prefab characters with equipment toggling and a Unity-style controller.",
   "scripts": {
     "convert:races": "node scripts/convert-races.mjs",
+    "convert:anims": "node scripts/convert-anims.mjs",
+    "convert:all": "node scripts/convert-races.mjs && node scripts/convert-anims.mjs",
     "serve": "npx serve .",
     "test:install": "playwright install chromium",
     "test:e2e": "playwright test",
@@ -13,5 +15,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1"
+  },
+  "dependencies": {
+    "serve": "^14.2.6"
   }
 }

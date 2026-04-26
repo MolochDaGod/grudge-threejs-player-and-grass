@@ -18513,7 +18513,15 @@ var Player = class {
         );
       });
     }
-    const gltfLoader = new Oe2();
+    // Prefer the boot module's DRACO-aware GLTFLoader (window.THREE_GLTFLoader
+    // wired with window.THREE_DRACOLoader in index.html) so KHR_draco_mesh_-
+    // compression GLBs from the Grudge ObjectStore decompress correctly.
+    const SharedGLTFLoader = (typeof window !== "undefined") ? window.THREE_GLTFLoader : null;
+    const SharedDRACOLoader = (typeof window !== "undefined") ? window.THREE_DRACOLoader : null;
+    const gltfLoader = SharedGLTFLoader ? new SharedGLTFLoader() : new Oe2();
+    if (SharedDRACOLoader && typeof gltfLoader.setDRACOLoader === "function") {
+      gltfLoader.setDRACOLoader(SharedDRACOLoader);
+    }
     return new Promise((resolve, reject) => {
       gltfLoader.load(url, (gltf) => resolve(gltf), undefined, (err) => reject(err));
     });

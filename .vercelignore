@@ -3,6 +3,12 @@
 # The active deployment only needs ./character/races/ + ./character/races/anims/.
 character/*.glb
 
+# ── Raw race FBX masters ── the Player loads the converted GLBs in
+# character/races/<PREFIX>_Characters.glb; the source FBXs sit alongside
+# them only for re-conversion convenience.
+character/races/*.fbx
+character/races/anims/*.fbx
+
 # ── Dev junk
 node_modules
 .history
@@ -14,8 +20,21 @@ playwright-report
 test-results
 .playwright
 
+# ── Tests + tooling (not part of the runtime bundle)
+tests
+playwright.config.js
+package-lock.json
+package.json
+
 # ── Toolchain (kept locally for re-conversion, not for prod)
 scripts
+
+# ── Orphan UI / dev pages NOT linked from the active page. Keep
+# mainpanel.html (linked from src/index.html as "Open Full Main Panel").
+characterstats.html
+client-portal.html
+pullobjstore.html
+UIlayer.html
 
 # ── README, LICENSE etc.
 README.md

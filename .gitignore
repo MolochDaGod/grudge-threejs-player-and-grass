@@ -16,6 +16,12 @@ Thumbs.db
 .history/
 *.log
 
+# Playwright test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 # Source FBX files — the runtime only consumes the converted GLBs, and FBX
 # inputs are tracked in the Asset-Rig-Editor / variant-pipeline repos.
 *.fbx

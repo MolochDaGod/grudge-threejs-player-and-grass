@@ -11,8 +11,11 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: "./tests",
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  // Headless Chromium can take 40-60s to spin up WebGL + the grass
+  // scene's first chunks on cold boot. Give the smoke test enough
+  // headroom for both that and the assertion windows after it.
+  timeout: 180_000,
+  expect: { timeout: 15_000 },
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

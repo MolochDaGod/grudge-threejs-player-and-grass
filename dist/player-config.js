@@ -47,9 +47,9 @@
     {
       id: "human",
       label: "Human (WK)",
-      file: "Human.fbx",
+      file: "WK_Characters.glb",
       prefix: "WK_",
-      scale: 1.0,
+      scale: 0.04,
       yOffset: 0.0,
       rigType: "bip001",
       meta: {
@@ -66,9 +66,9 @@
     {
       id: "barbarian",
       label: "Barbarian (BRB)",
-      file: "Barbarian.fbx",
+      file: "BRB_Characters.glb",
       prefix: "BRB_",
-      scale: 1.0,
+      scale: 0.04,
       yOffset: 0.0,
       rigType: "bip001",
       meta: {
@@ -85,9 +85,9 @@
     {
       id: "elf",
       label: "Elf (ELF)",
-      file: "Elf.fbx",
+      file: "ELF_Characters.glb",
       prefix: "ELF_",
-      scale: 1.0,
+      scale: 0.04,
       yOffset: 0.0,
       rigType: "bip001",
       meta: {
@@ -104,9 +104,9 @@
     {
       id: "dwarf",
       label: "Dwarf (DWF)",
-      file: "Dwarf.fbx",
+      file: "DWF_Characters.glb",
       prefix: "DWF_",
-      scale: 0.9,
+      scale: 0.035,
       yOffset: 0.0,
       rigType: "bip001",
       meta: {
@@ -123,9 +123,9 @@
     {
       id: "orc",
       label: "Orc (ORC)",
-      file: "Orc.fbx",
+      file: "ORC_Characters.glb",
       prefix: "ORC_",
-      scale: 1.05,
+      scale: 0.045,
       yOffset: 0.0,
       rigType: "bip001",
       meta: {
@@ -142,9 +142,9 @@
     {
       id: "undead",
       label: "Undead (UD)",
-      file: "Undead.fbx",
+      file: "UD_Characters.glb",
       prefix: "UD_",
-      scale: 1.0,
+      scale: 0.04,
       yOffset: 0.0,
       rigType: "bip001",
       meta: {
