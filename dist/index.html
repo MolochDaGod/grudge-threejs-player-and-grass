@@ -707,14 +707,12 @@
   <script src="./equipment-manager.js"></script>
   <script src="./player-config.js"></script>
   <!--
-    script.js is loaded async so the page's `load` event fires quickly
-    (the WebGL + grass-scene init inside script.js can stall the main
-    thread for 15-30s on cold-cache headless Chromium, which would push
-    page.goto past Playwright's defaults). The boot module below uses
-    GrudgeReadyBuffer to catch any grudge:player-ready event that fires
-    before its real listener is registered.
+    script.js is NOT loaded as a head script. The boot <script type="module">
+    below schedules it via setTimeout(0) so the page's `load` event fires
+    immediately after head parsing (otherwise the WebGL + grass-scene init
+    inside script.js stalls the main thread for 15-30s on cold-cache
+    headless Chromium, which would push page.goto past Playwright defaults).
   -->
-  <script src="./script.js" async></script>
 
   <!--
       Boot module:
@@ -754,10 +752,24 @@
     // ── Stage 1: equipment-manager + player-config ──
     // Loaded as classic scripts in <head>; already on window.
     // ── Stage 2: script.js ──
-    // Loaded as `async` in <head>. We don't await it here — instead, the
-    // boot waits for the grudge:player-ready event (or its buffered
-    // version in window.GrudgeReadyBuffer) inside the try block below.
-    const scriptReady = Promise.resolve();
+    // Loaded only AFTER the page's `load` event fires. If we attach it
+    // earlier, headless Chromium's `load` event waits for script.js to
+    // finish (including its 15-30s WebGL/grass init), which pushes
+    // page.goto past Playwright's default timeouts.
+    const scriptReady = new Promise((resolve, reject) => {
+      const kick = () => {
+        // setTimeout(0) yields to give the browser one tick to paint the
+        // initial DOM (race-tile shells from the head HTML still render
+        // immediately; tiles get filled in by buildMainPanel once Player
+        // fires grudge:player-ready).
+        setTimeout(() => loadScript("./script.js").then(resolve, reject), 0);
+      };
+      if (document.readyState === "complete") kick();
+      else window.addEventListener("load", kick, { once: true });
+    }).catch((err) => {
+      console.error("[boot] script.js load failed:", err);
+      throw err;
+    });
 
     // ── Stage 3: dynamic esm.sh imports for the sandbox / addons ──
     // None of these are required for the smoke test — each is guarded

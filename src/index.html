@@ -752,14 +752,20 @@
     // ── Stage 1: equipment-manager + player-config ──
     // Loaded as classic scripts in <head>; already on window.
     // ── Stage 2: script.js ──
-    // Scheduled after a setTimeout(0) so the page's `load` event fires
-    // before script.js's WebGL/grass init can stall the main thread.
-    // Once script.js executes it dispatches grudge:player-ready, which
-    // the head buffer captures and our listener replays.
+    // Loaded only AFTER the page's `load` event fires. If we attach it
+    // earlier, headless Chromium's `load` event waits for script.js to
+    // finish (including its 15-30s WebGL/grass init), which pushes
+    // page.goto past Playwright's default timeouts.
     const scriptReady = new Promise((resolve, reject) => {
-      setTimeout(() => {
-        loadScript("./script.js").then(resolve, reject);
-      }, 0);
+      const kick = () => {
+        // setTimeout(0) yields to give the browser one tick to paint the
+        // initial DOM (race-tile shells from the head HTML still render
+        // immediately; tiles get filled in by buildMainPanel once Player
+        // fires grudge:player-ready).
+        setTimeout(() => loadScript("./script.js").then(resolve, reject), 0);
+      };
+      if (document.readyState === "complete") kick();
+      else window.addEventListener("load", kick, { once: true });
     }).catch((err) => {
       console.error("[boot] script.js load failed:", err);
       throw err;
