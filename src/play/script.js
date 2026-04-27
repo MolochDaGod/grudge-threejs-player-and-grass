@@ -18560,6 +18560,12 @@ var Player = class {
     this.character = character;
     this.targetSkinned = this._findFirstSkinnedMesh(model);
     this.rigType = this._detectRigFromBones(model, character.rigType);
+    // Race FBX/GLBs ship without a baked baseColorTexture — if the config
+    // points at a sidecar PNG (character/races/textures/<race>/default.png)
+    // load it and slap it on every skinned mesh's `material.map`.
+    if (character && character.texture) {
+      this._applyRaceTexture(model, character.texture);
+    }
     if (this.rigType === "cc" && cfg && cfg.CC_BONE_MAP) {
       this.boneNameMap = this._buildBoneNameMap(model, cfg.CC_BONE_MAP);
     } else if (this.rigType === "bip001" && cfg && cfg.BIP001_BONE_MAP) {
@@ -18648,6 +18654,38 @@ var Player = class {
   // Backwards-compatible alias — older callers may still reference
   // _retargetMixamoToCC.
   _retargetMixamoToCC(clip) { return this._retargetMixamoToTarget(clip); }
+  // Load a sidecar diffuse PNG and apply it to every mesh+material on the
+  // loaded character. Used to texture the Toon_RTS race FBXs which ship
+  // with vertex-color-only materials. Skips child meshes whose material is
+  // currently .visible=false (so unequipped armor/weapons stay invisible).
+  _applyRaceTexture(root, textureUrl) {
+    try {
+      const loader = new Vh();
+      const tex = loader.load(textureUrl);
+      tex.colorSpace = Nt;
+      tex.flipY = false; // FBX UVs come in already flipped
+      tex.anisotropy = 8;
+      this._raceTexture = tex;
+      root.traverse((o) => {
+        if (!o.isMesh && !o.isSkinnedMesh) return;
+        const apply = (mat) => {
+          if (!mat) return;
+          mat.map = tex;
+          // Toon_RTS materials default to vertexColors=true which tints the
+          // texture; turn it off so the PNG shows through unmodified.
+          if (mat.vertexColors) mat.vertexColors = false;
+          // Brighten matte-flat skin/cloth meshes so the diffuse pops.
+          if (typeof mat.roughness === "number") mat.roughness = 0.85;
+          if (typeof mat.metalness === "number") mat.metalness = 0.05;
+          mat.needsUpdate = true;
+        };
+        if (Array.isArray(o.material)) o.material.forEach(apply);
+        else apply(o.material);
+      });
+    } catch (err) {
+      console.warn("[Player] _applyRaceTexture failed for", textureUrl, err);
+    }
+  }
   _fillMissingAnimations(character, cfg) {
     // Bip001 race characters get the extended slot list; everyone else uses
     // the locomotion-only set. Bip001 also skips the Mixamo/KayKit fallback
@@ -18683,15 +18721,29 @@ var Player = class {
       }
     });
   }
+  // Each entry in `urls` is either a string (use the caller's sourceRig
+  // hint) or an { url, rig } object (used so the player-config can mix
+  // Bip001-rigged GLBs and Mixamo-rigged Unity controller FBXs in the same
+  // priority list and still get correct retargeting).
   _tryLocalUrls(urls, idx, state, sourceRig) {
     if (!sourceRig) sourceRig = "mixamo";
     if (idx >= urls.length) return Promise.resolve(false);
-    const url = urls[idx];
+    const entry = urls[idx];
+    let url, rig;
+    if (typeof entry === "string") {
+      url = entry;
+      rig = sourceRig;
+    } else if (entry && typeof entry === "object" && entry.url) {
+      url = entry.url;
+      rig = entry.rig || sourceRig;
+    } else {
+      return this._tryLocalUrls(urls, idx + 1, state, sourceRig);
+    }
     return this._loadModelFile(url)
       .then((gltf) => {
         const clips = (gltf && gltf.animations) || [];
         if (!clips.length) return false;
-        this._registerClip(state, clips[0], sourceRig);
+        this._registerClip(state, clips[0], rig);
         return true;
       })
       .catch(() => false)
@@ -18785,6 +18837,10 @@ var Player = class {
     if (previous && previous !== action) previous.fadeOut(fade);
     action.fadeIn(fade).play();
     this.currentAction = action;
+    // Spell VFX trigger: dispatch grudge:vfx so the world layer / HUD can
+    // spawn projectiles, ground rings, teleport flashes, etc. matched to
+    // the animation slot via cfg.SPELL_VFX[name].
+    this._dispatchVfx(name);
     if (this._oneShotTimeout) clearTimeout(this._oneShotTimeout);
     const dur = (action.getClip && action.getClip().duration) || 0.6;
     const self = this;
@@ -18794,6 +18850,26 @@ var Player = class {
       if (self.currentAction === action) self.currentAction = null;
     }, Math.max(50, (dur / Math.max(0.01, speed)) * 1000 - fade * 1000));
     return true;
+  }
+  _dispatchVfx(slot) {
+    if (typeof window === "undefined") return;
+    const cfg = window.GrudgePlayerConfig;
+    if (!cfg || !cfg.SPELL_VFX) return;
+    const vfx = cfg.SPELL_VFX[slot];
+    if (!vfx) return;
+    try {
+      const pos = this.group ? this.group.position : null;
+      window.dispatchEvent(new CustomEvent("grudge:vfx", {
+        detail: {
+          slot: slot,
+          kind: vfx.kind,
+          color: vfx.color,
+          duration: vfx.duration,
+          sound: vfx.sound,
+          position: pos ? { x: pos.x, y: pos.y, z: pos.z } : null,
+        },
+      }));
+    } catch (err) { /* CustomEvent unsupported in some envs */ }
   }
   // Hold-style action (Block). on=true plays in a loop, on=false fades back.
   // Blocks don't take over the locomotion clip; we just fade the held

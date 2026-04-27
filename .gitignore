@@ -37,3 +37,10 @@ character/*.glb
 !character/races/*.glb
 !character/races/anims/
 !character/races/anims/*.glb
+
+# Bulk Unity controller animation pack (1.5+ GB extracted). The runtime
+# loads paths under /Character-Animator-Mapper/... only in dev (Vite serves
+# the folder live via the grudgeCharacterAssets plugin); we never deploy
+# the raw FBXs to Vercel.
+Character-Animator-Mapper.zip
+Character-Animator-Mapper/

@@ -1,22 +1,35 @@
 {
   "name": "grudge-threejs-player-and-grass",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Three.js player + grass scene wired up to load Grudge Studio race prefab characters with equipment toggling and a Unity-style controller.",
+  "description": "Three.js character creator + grass scene + HUD wired to the existing api.grudge-studio.com character backend and assets.grudge-studio.com (Cloudflare R2 bucket grudge-assets).",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "convert:races": "node scripts/convert-races.mjs",
     "convert:anims": "node scripts/convert-anims.mjs",
-    "convert:all": "node scripts/convert-races.mjs && node scripts/convert-anims.mjs",
-    "serve": "npx serve .",
+    "convert:skins": "node scripts/convert-skins.mjs",
+    "convert:all": "node scripts/convert-races.mjs && node scripts/convert-anims.mjs && node scripts/convert-skins.mjs",
+    "upload:r2": "node scripts/upload-r2.mjs",
+    "publish:assets": "npm run convert:all && npm run upload:r2",
     "test:install": "playwright install chromium",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1"
+    "@aws-sdk/client-s3": "^3.682.0",
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^24.12.2",
+    "@types/three": "^0.182.0",
+    "dotenv": "^16.4.7",
+    "sharp": "^0.34.4",
+    "typescript": "~5.9.2",
+    "vite": "^7.3.2"
   },
   "dependencies": {
-    "serve": "^14.2.6"
+    "three": "^0.182.0"
   }
 }

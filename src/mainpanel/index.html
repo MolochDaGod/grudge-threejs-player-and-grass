@@ -2476,6 +2476,12 @@
     buildHotbar();
     rebuildSidebar();
   </script>
+
+  <!-- Real equipment driver: posts grudge:equipment-change to the parent
+       (landing or play) page so the loaded character's child meshes flip
+       visibility live. Renders a fixed overlay on the right edge of the
+       mainpanel chrome. -->
+  <script type="module" src="./main.ts"></script>
 </body>
 
 </html>

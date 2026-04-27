@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Grudge Warlords &middot; Player &amp; Grass</title>
+    <meta name="theme-color" content="#1a120c" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="mask-icon" href="/favicon-mask.svg" color="#c9950a" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #c9950a;
+      --gold-bright: #d4a400;
+      --panel: #1a120c;
+      --panel2: #221710;
+      --border: #c9950a;
+      --border-dim: #3a2a1a;
+      --text: #f5e2c1;
+      --muted: #9b7d52;
+      --hp: #d44040;
+      --hp-bg: #5a1010;
+      --mp: #3a7ad8;
+      --mp-bg: #143560;
+      --sp: #9ab830;
+      --sp-bg: #3a4a10;
+    }
+
+    /* ── TOP-LEFT INFO + CHARACTER SELECT ── */
+    #info {
+      font-family: "JetBrains Mono", monospace;
+      line-height: 1.55;
+      max-width: 360px;
+      border: 1px solid var(--border-dim);
+      border-radius: 6px;
+    }
+
+    #info .controls {
+      color: #d4e8ff;
+    }
+
+    #info .row {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #info label {
+      color: var(--gold);
+      font-family: "Cinzel", serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    #info select {
+      flex: 1;
+      background: #0a0705;
+      color: var(--text);
+      border: 1px solid var(--border-dim);
+      border-radius: 3px;
+      padding: 4px 6px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+    }
+
+    #info select:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    #info a.panel-link {
+      display: inline-block;
+      margin-top: 6px;
+      color: var(--gold);
+      text-decoration: none;
+      font-family: "Cinzel", serif;
+      font-size: 11px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      border-bottom: 1px dashed var(--border-dim);
+    }
+
+    #info a.panel-link:hover {
+      color: var(--gold-bright);
+      border-bottom-color: var(--gold);
+    }
+
+    /* ── BOTTOM HUD (mainpanel-style) ── */
+    #hud {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: center;
+      padding: 0 12px 12px;
+      pointer-events: none;
+      font-family: "Cinzel", serif;
+    }
+
+    #hud-frame {
+      pointer-events: auto;
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+      background: linear-gradient(180deg, rgba(26, 18, 12, .92), rgba(10, 7, 5, .92));
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, .55), inset 0 0 16px rgba(0, 0, 0, .5);
+      min-width: 720px;
+    }
+
+    .hud-portrait {
+      width: 64px;
+      height: 64px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: radial-gradient(circle at 50% 40%, rgba(212, 164, 0, .18), #0f0805 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .hud-portrait b {
+      font-size: 13px;
+      color: var(--gold-bright);
+      letter-spacing: 1.5px;
+    }
+
+    .hud-stats {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      min-width: 220px;
+    }
+
+    .hud-name {
+      color: var(--gold-bright);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .hud-sub {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .bar {
+      position: relative;
+      height: 12px;
+      border: 1px solid var(--border-dim);
+      border-radius: 2px;
+      overflow: hidden;
+      background: #0a0705;
+    }
+
+    .bar .fill {
+      height: 100%;
+      transition: width .3s ease;
+    }
+
+    .bar .lbl {
+      position: absolute;
+      inset: 0;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9px;
+      line-height: 12px;
+      color: #fff;
+      text-shadow: 0 1px 2px #000;
+    }
+
+    .bar.hp .fill {
+      background: linear-gradient(90deg, #7a1515, var(--hp));
+    }
+
+    .bar.mp .fill {
+      background: linear-gradient(90deg, #1a3560, var(--mp));
+    }
+
+    .bar.sp .fill {
+      background: linear-gradient(90deg, #4a5a10, var(--sp));
+    }
+
+    .hud-hotbar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .slot {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #1a0f08, #0f0805);
+      border: 1.5px solid var(--border-dim);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text);
+      box-shadow: inset 0 0 6px #000;
+    }
+
+    .slot.empty {
+      color: #444;
+    }
+
+    .slot .key {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 9px;
+      color: var(--muted);
+    }
+
+    .hud-divider {
+      width: 1px;
+      background: var(--border-dim);
+      margin: 4px 4px;
+    }
+
+    /* ── MAIN PANEL: 6 race tiles, click-to-swap + per-tile Equipment ── */
+    #main-panel {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 14;
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      background: linear-gradient(180deg, rgba(26, 18, 12, .94), rgba(10, 7, 5, .94));
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .6);
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    #main-panel .mp-title {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      padding: 4px 0;
+      align-self: stretch;
+      border-right: 1px solid var(--border-dim);
+      margin-right: 4px;
+    }
+
+    .race-tile {
+      position: relative;
+      width: 96px;
+      min-height: 110px;
+      background: linear-gradient(180deg, #18100a, #0c0805);
+      border: 1.5px solid var(--border-dim);
+      border-radius: 8px;
+      padding: 6px 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: border-color .15s ease, transform .12s ease;
+    }
+
+    .race-tile:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+    }
+
+    .race-tile.active {
+      border-color: var(--race-color, var(--gold));
+      box-shadow: 0 0 14px var(--race-color, rgba(212, 164, 0, .35));
+    }
+
+    .race-tile .rt-emoji {
+      font-size: 26px;
+      line-height: 1;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .8));
+    }
+
+    .race-tile .rt-name {
+      font-family: "Cinzel", serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--gold-bright);
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .race-tile .rt-trait {
+      font-size: 9px;
+      color: var(--text);
+      text-align: center;
+      opacity: .85;
+    }
+
+    .race-tile .rt-faction {
+      font-size: 8px;
+      letter-spacing: 1.2px;
+      color: var(--race-color, var(--muted));
+      text-transform: uppercase;
+      border-top: 1px dashed var(--border-dim);
+      padding-top: 2px;
+      margin-top: auto;
+      width: 100%;
+      text-align: center;
+    }
+
+    .race-tile .rt-gear {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(201, 149, 10, .85);
+      color: #0a0705;
+      border: none;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: "Cinzel", serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .race-tile .rt-gear:hover {
+      background: var(--gold-bright);
+    }
+
+    .race-tile .rt-store {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      font-size: 7px;
+      letter-spacing: 1px;
+      color: var(--gold);
+      background: rgba(0, 0, 0, .55);
+      border-radius: 2px;
+      padding: 0 3px;
+    }
+
+    /* ── Source toggle (right side of main-panel) ── */
+    #main-panel .mp-source {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 4px 6px 4px 8px;
+      border-left: 1px solid var(--border-dim);
+      margin-left: 4px;
+    }
+
+    #main-panel .mp-source-label {
+      font-family: "Cinzel", serif;
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    #main-panel .mp-source-switch {
+      display: flex;
+      gap: 2px;
+      background: #0a0705;
+      border: 1px solid var(--border-dim);
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    #main-panel .mp-source-switch button {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-radius: 3px;
+      padding: 3px 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    #main-panel .mp-source-switch button.active {
+      background: var(--gold);
+      color: #0a0705;
+      font-weight: 700;
+    }
+
+    #main-panel .mp-source-switch button:not(.active):hover {
+      color: var(--text);
+    }
+
+    /* ── EQUIPMENT MODAL (opened from race tile) ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      z-index: 30;
+      display: none;
+    }
+
+    .modal-backdrop.visible {
+      display: block;
+    }
+
+    #equipment {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px;
+      max-height: 78vh;
+      overflow-y: auto;
+      background: linear-gradient(180deg, rgba(26, 18, 12, .96), rgba(10, 7, 5, .96));
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--text);
+      z-index: 31;
+      display: none;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, .7);
+    }
+
+    #equipment.visible {
+      display: block;
+    }
+
+    #equipment .modal-close {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    #equipment .modal-close:hover {
+      color: var(--gold-bright);
+    }
+
+    #equipment h2 {
+      margin: 0 0 8px;
+      font-family: "Cinzel", serif;
+      font-size: 12px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      border-bottom: 1px solid var(--border-dim);
+      padding-bottom: 4px;
+    }
+
+    #equipment .group {
+      margin-top: 8px;
+    }
+
+    #equipment .group-label {
+      color: var(--gold);
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    #equipment .slot-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 2px 0;
+    }
+
+    #equipment .slot-name {
+      width: 70px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+
+    #equipment .variant-btn {
+      background: #0a0705;
+      color: var(--text);
+      border: 1px solid var(--border-dim);
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    #equipment .variant-btn:hover {
+      border-color: var(--gold);
+    }
+
+    #equipment .variant-btn.equipped {
+      background: var(--gold);
+      color: #0a0705;
+      border-color: var(--gold-bright);
+    }
+
+    #equipment .empty-msg {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 10px;
+    }
+
+    /* Slot tinting: empty (no clip bound) vs bound vs active. */
+    .slot.bound {
+      border-color: var(--gold);
+      color: var(--gold-bright);
+    }
+
+    .slot.bound .key {
+      color: var(--gold);
+    }
+
+    /* ── Garry's Mod-style tabbed sandbox panel ── */
+    #equipment .tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--border-dim);
+      margin: 0 -12px 8px;
+      padding: 0 8px;
+    }
+
+    #equipment .tab {
+      flex: 1;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 6px 4px;
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    #equipment .tab:hover {
+      color: var(--gold);
+    }
+
+    #equipment .tab.active {
+      color: var(--gold-bright);
+      border-bottom-color: var(--gold);
+    }
+
+    #equipment .tab-body {
+      display: none;
+    }
+
+    #equipment .tab-body.active {
+      display: block;
+    }
+
+    #equipment .row-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border-dim);
+    }
+
+    #equipment .row-actions button {
+      flex: 1;
+      background: #0a0705;
+      color: var(--text);
+      border: 1px solid var(--border-dim);
+      border-radius: 3px;
+      padding: 4px 6px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    #equipment .row-actions button:hover {
+      border-color: var(--gold);
+    }
+
+    #equipment .row-actions button.danger:hover {
+      border-color: var(--hp);
+      color: var(--hp);
+    }
+
+    #equipment .spawn-row,
+    #equipment .preset-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px dashed var(--border-dim);
+    }
+
+    #equipment .spawn-row:last-child,
+    #equipment .preset-row:last-child {
+      border-bottom: none;
+    }
+
+    #equipment .spawn-label,
+    #equipment .preset-label {
+      flex: 1;
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    #equipment .preset-sub {
+      display: block;
+      font-size: 9px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    #equipment .spawn-btn,
+    #equipment .preset-btn {
+      background: var(--gold);
+      color: #0a0705;
+      border: 1px solid var(--gold-bright);
+      border-radius: 3px;
+      padding: 3px 8px;
+      font-family: "Cinzel", serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    #equipment .spawn-btn:hover,
+    #equipment .preset-btn:hover {
+      background: var(--gold-bright);
+    }
+
+    #equipment .spawn-count {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+
+  <!--
+      Importmap so the runtime SkeletonUtils we use for Mixamo->CC retargeting
+      can pull from the same three version that the bundled script.js was built
+      against (three 0.182.0). Keep these versions in lock-step.
+    -->
+
+
+  <!--
+    Classic scripts ── these MUST land on window before any other script
+    runs (the boot  <script type="importmap">
+      {
+        "imports": {
+          "three": "https://esm.sh/three@0.182.0",
+          "three/addons/": "https://esm.sh/three@0.182.0/examples/jsm/"
+        }
+      }
+    </script>
+ <script type="module"> below blocks on cold-cache esm.sh
+    fetches that can take 30-60s, but the smoke test asserts
+    `window.GrudgePlayerConfig.RACES` is reachable in 15s).
+  -->
+  <!--
+    Buffer the grudge:player-ready event so the boot module (which
+    registers its real listener after async loads) can replay it even
+    if it fires before the listener is wired.
+  -->
+  <script>
+    (function () {
+      window.GrudgeReadyBuffer = null;
+      window.addEventListener("grudge:player-ready", function (ev) {
+        window.GrudgeReadyBuffer = ev;
+      });
+    })();
+  </script>
+  <!-- Loaded as modules so Vite's HTML transformer is happy in build mode.
+       The files themselves attach window.GrudgeEquipmentManager and
+       window.GrudgePlayerConfig globals via IIFEs so type="module" is
+       behaviour-compatible. -->
+  <!-- Bridges the bundled Player class to the api.grudge-studio.com
+       character backend + the postMessage equipment bridge. -->
+  <!--
+    script.js is NOT loaded as a head script. The boot <script type="module">
+    below schedules it via setTimeout(0) so the page's `load` event fires
+    immediately after head parsing (otherwise the WebGL + grass-scene init
+    inside script.js stalls the main thread for 15-30s on cold-cache
+    headless Chromium, which would push page.goto past Playwright defaults).
+  -->
+
+  <!--
+      Boot module:
+        1. Pull SkeletonUtils + GLTFLoader + FBXLoader from three/addons and
+           stash them on window so the classic-script bundle (script.js)
+           can use them. FBXLoader is needed for the 6 Toon_RTS race FBXs
+           in ../character/races/.
+        2. Inject equipment-manager.js (window.GrudgeEquipmentManager).
+        3. Inject player-config.js (window.GrudgePlayerConfig with the
+           6 race characters: Human / Barbarian / Elf / Dwarf / Orc / Undead).
+        4. Inject script.js (the bundled three.js scene + Player class).
+        5. Populate the character <select> from GrudgePlayerConfig.CHARACTERS
+           and wire up the equipment panel + hotbar feedback.
+    -->
+  <script type="module" crossorigin src="/assets/play-CwfVBr-I.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/catalog-qIR7n6O_.js">
+  <link rel="stylesheet" crossorigin href="/assets/play-SaQ7YOQo.css">
+</head>
+
+<body>
+  <div id="info">
+    <div class="controls">
+      WASD = move &nbsp;|&nbsp; Space = jump &nbsp;|&nbsp; Shift = sprint
+      &nbsp;|&nbsp; MouseWheel = zoom
+      <br />
+      LMB = attack &nbsp;|&nbsp; RMB = block &nbsp;|&nbsp; LCtrl = roll
+      &nbsp;|&nbsp; Q = dodge &nbsp;|&nbsp; 1–9 = skills
+    </div>
+    <div class="row">
+      <label for="char-select">Character</label>
+      <select id="char-select" aria-label="Choose character"></select>
+    </div>
+    <a class="panel-link" href="/mainpanel" target="_blank" rel="noopener">
+      Open Full Main Panel &rsaquo;
+    </a>
+  </div>
+
+  <!-- ── MAIN PANEL ─────────────────────────────────────────────────────
+       Top-center 6-tile race grid populated from GrudgePlayerConfig.RACES.
+       Click a tile = swap active character (reload with ?char=<id>); click
+       the per-tile "Gear" button = open the equipment modal below.
+  -->
+  <div id="main-panel" aria-label="Race select"></div>
+
+  <!-- ── EQUIPMENT MODAL ─────────────────────────────────────────────────
+       Modal overlay opened from a race tile's Gear button. Hosts the
+       tabbed sandbox UI (Gear / Spawn / Preset) once the Player class
+       fires `grudge:player-ready`.
+  -->
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div id="equipment" role="dialog" aria-modal="true" aria-label="Equipment"></div>
+
+  <!-- Bottom HUD: portrait, vitals, hotbar — pulls visuals from the
+         Grudge mainpanel theme (Cinzel + gold + stone) so the deployment
+         already shows "your UI / mainpanel" without leaving the scene. -->
+  <div id="hud">
+    <div id="hud-frame">
+      <div class="hud-portrait"><b id="hud-name">Knight</b></div>
+      <div class="hud-stats">
+        <div>
+          <span class="hud-name" id="hud-name-line">Warlord</span>
+          <span class="hud-sub" id="hud-sub">Lv 1 &middot; Crusade</span>
+        </div>
+        <div class="bar hp">
+          <div class="fill" style="width:78%"></div>
+          <div class="lbl">HP 780 / 1000</div>
+        </div>
+        <div class="bar mp">
+          <div class="fill" style="width:62%"></div>
+          <div class="lbl">MP 310 / 500</div>
+        </div>
+        <div class="bar sp">
+          <div class="fill" style="width:91%"></div>
+          <div class="lbl">SP 91 / 100</div>
+        </div>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-hotbar">
+        <div class="slot"><span class="key">1</span>&#9876;</div>
+        <div class="slot"><span class="key">2</span>&#128737;</div>
+        <div class="slot"><span class="key">3</span>&#128293;</div>
+        <div class="slot"><span class="key">4</span>&#9889;</div>
+        <div class="slot empty"><span class="key">5</span>&middot;</div>
+        <div class="slot"><span class="key">6</span>&#127869;</div>
+        <div class="slot"><span class="key">7</span>&#129482;</div>
+        <div class="slot"><span class="key">8</span>&#128137;</div>
+        <div class="slot empty"><span class="key">9</span>&middot;</div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

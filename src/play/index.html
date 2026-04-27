@@ -704,8 +704,15 @@
       });
     })();
   </script>
-  <script src="./equipment-manager.js"></script>
-  <script src="./player-config.js"></script>
+  <!-- Loaded as modules so Vite's HTML transformer is happy in build mode.
+       The files themselves attach window.GrudgeEquipmentManager and
+       window.GrudgePlayerConfig globals via IIFEs so type="module" is
+       behaviour-compatible. -->
+  <script type="module" src="./equipment-manager.js"></script>
+  <script type="module" src="./player-config.js"></script>
+  <!-- Bridges the bundled Player class to the api.grudge-studio.com
+       character backend + the postMessage equipment bridge. -->
+  <script type="module" src="./sdk-bootstrap.ts"></script>
   <!--
     script.js is NOT loaded as a head script. The boot <script type="module">
     below schedules it via setTimeout(0) so the page's `load` event fires
@@ -1259,7 +1266,7 @@
       <label for="char-select">Character</label>
       <select id="char-select" aria-label="Choose character"></select>
     </div>
-    <a class="panel-link" href="../mainpanel.html" target="_blank" rel="noopener">
+    <a class="panel-link" href="/mainpanel" target="_blank" rel="noopener">
       Open Full Main Panel &rsaquo;
     </a>
   </div>
