@@ -29,18 +29,31 @@
   // but we keep local fallbacks under /character/races/ for offline dev.
   const RACE_DIR = "/character/races/";
 
-  // ── GRUDGE OBJECT STORE (CDN) ─────────────────────────────────────────
-  // Remote DRACO-compressed KayKit-style GLBs hosted at
-  //   https://molochdagod.github.io/ObjectStore/
-  // Boot module configures a DRACOLoader on the shared THREE_GLTFLoader so
-  // any swap to an `objectStore.url` decompresses correctly. The shared
-  // animation rigs ride alongside the character meshes — each pack is a
-  // 30-node Bip001-ish skeleton with 11–15 baked clips.
-  const STORE = "https://molochdagod.github.io/ObjectStore";
-  const STORE_CHAR_DIR = STORE + "/models/_optimized/characters/";
-  const ANIMATION_RIG_URL = STORE_CHAR_DIR + "Rig_Medium_General.glb";
-  const ANIMATION_RIG_MOVE_URL =
-    STORE_CHAR_DIR + "Rig_Medium_MovementBasic.glb";
+  // ── GRUDGE STUDIO OBJECT STORAGE (Cloudflare R2) ─────────────────────
+  // Same hostname check as src/shared/config.ts. On grudgewarlords.com the
+  // R2 bucket CORS allows direct access; everywhere else the /assets-cdn
+  // proxy defined in vercel.json / vite.config.ts forwards the request so
+  // there are no cross-origin issues on Vercel previews or localhost.
+  var ASSETS_URL = (function () {
+    try {
+      if (window.location.hostname === "grudgewarlords.com")
+        return "https://assets.grudge-studio.com";
+    } catch (e) { /* SSR guard */ }
+    return "/assets-cdn";
+  })();
+
+  // R2 path conventions (mirrors config.ts raceModelUrl / raceSkinUrl):
+  //   ASSETS_URL + "/characters/races/{raceId}/model.glb"
+  //   ASSETS_URL + "/characters/races/{raceId}/skins/{variant}.png"
+  //   ASSETS_URL + "/characters/races/anims/{packId}.glb"
+  var R2_RACES = ASSETS_URL + "/characters/races/";
+
+  // ── LOCAL CHARACTER GLBs ─────────────────────────────────────────────
+  // KayKit GLBs served from public/characters/kaykit/ (local only, used as
+  // ?store=1 alt variant when you want to swap to the KayKit rig).
+  const LOCAL_CHAR_DIR = "/characters/kaykit/";
+  const ANIMATION_RIG_URL = LOCAL_CHAR_DIR + "Rig_Medium_General.glb";
+  const ANIMATION_RIG_MOVE_URL = LOCAL_CHAR_DIR + "Rig_Medium_MovementBasic.glb";
 
   // ── UNITY CONTROLLER ANIMATION FBX PACKS ──────────────────────────────
   // The Toon_RTS Player.prefab Animator uses the same Mixamo-rigged motion
@@ -73,9 +86,9 @@
   function bip001(url) { return { url: url, rig: "bip001" }; }
 
   // ── RACE TEXTURES ─────────────────────────────────────────────────────
-  // High-res baked albedo PNGs in character/races/textures/<race>/. The
-  // Player class slaps these onto the loaded skinned mesh's `material.map`
-  // because the source FBX/GLBs ship without a baseColorTexture.
+  // Skins are loaded from Grudge Studio object storage at runtime.
+  // Path: ASSETS_URL + "/characters/races/{raceId}/skins/{variant}.png"
+  // TEXTURE_DIR kept as a local fallback for offline dev.
   const TEXTURE_DIR = "/character/races/textures/";
 
   // ── 6 PLAYABLE RACES ───────────────────────────────────────────────────
@@ -99,7 +112,7 @@
       scale: 0.08,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: TEXTURE_DIR + "human/default.png",
+      texture: R2_RACES + "human/skins/default.png",
       meta: {
         color: "#94a3b8",
         faction: "crusade",
@@ -109,7 +122,7 @@
           "Versatile and adaptable — masters of none, capable of all.",
         passive: "+1 to all attributes",
       },
-      objectStore: { url: STORE_CHAR_DIR + "soldier.glb", scale: 2.0 },
+      objectStore: { url: LOCAL_CHAR_DIR + "Ranger.glb", scale: 2.0 },
     },
     {
       id: "barbarian",
@@ -119,7 +132,7 @@
       scale: 0.08,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: TEXTURE_DIR + "barbarian/default.png",
+      texture: R2_RACES + "barbarian/skins/default.png",
       meta: {
         color: "#f43f5e",
         faction: "crusade",
@@ -129,7 +142,7 @@
           "Untamed fury given form — raw power and relentless aggression.",
         passive: "+3 STR, +2 AGI, +1 VIT, +1 END, +1 TAC",
       },
-      objectStore: { url: STORE_CHAR_DIR + "Barbarian.glb", scale: 2.0 },
+      objectStore: { url: LOCAL_CHAR_DIR + "Barbarian.glb", scale: 2.0 },
     },
     {
       id: "elf",
@@ -139,7 +152,7 @@
       scale: 0.08,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: TEXTURE_DIR + "elf/highelves.png",
+      texture: R2_RACES + "elf/skins/highelves.png",
       meta: {
         color: "#22d3ee",
         faction: "fabled",
@@ -149,7 +162,7 @@
           "Ancient and graceful — wielders of arcane arts and deadly precision.",
         passive: "+3 INT, +2 DEX, +2 AGI, +1 WIS",
       },
-      objectStore: { url: STORE_CHAR_DIR + "Ranger.glb", scale: 2.0 },
+      objectStore: { url: LOCAL_CHAR_DIR + "Ranger.glb", scale: 2.0 },
     },
     {
       id: "dwarf",
@@ -159,7 +172,7 @@
       scale: 0.07,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: TEXTURE_DIR + "dwarf/default.png",
+      texture: R2_RACES + "dwarf/skins/default.png",
       meta: {
         color: "#f59e0b",
         faction: "fabled",
@@ -169,7 +182,7 @@
           "Stout mountain folk — unyielding defense and masterful craftsmanship.",
         passive: "+3 END, +2 VIT, +1 STR, +1 DEX, +1 WIS",
       },
-      objectStore: { url: STORE_CHAR_DIR + "Knight.glb", scale: 2.0 },
+      objectStore: { url: LOCAL_CHAR_DIR + "Knight.glb", scale: 2.0 },
     },
     {
       id: "orc",
@@ -179,7 +192,7 @@
       scale: 0.09,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: TEXTURE_DIR + "orc/default.png",
+      texture: R2_RACES + "orc/skins/default.png",
       meta: {
         color: "#65a30d",
         faction: "legion",
@@ -189,7 +202,7 @@
           "Savage brutes bred for war — crushing power and iron will.",
         passive: "+4 STR, +2 VIT, +2 END",
       },
-      objectStore: { url: STORE_CHAR_DIR + "Mage.glb", scale: 2.0 },
+      objectStore: { url: LOCAL_CHAR_DIR + "Mage.glb", scale: 2.0 },
     },
     {
       id: "undead",
@@ -199,7 +212,7 @@
       scale: 0.08,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: TEXTURE_DIR + "undead/default.png",
+      texture: R2_RACES + "undead/skins/default.png",
       meta: {
         color: "#a78bfa",
         faction: "legion",
@@ -209,18 +222,24 @@
           "Death-touched revenants fueled by dark energy and grudges unresolved.",
         passive: "+3 VIT, +2 END, +2 WIS, +1 STR",
       },
-      objectStore: { url: STORE_CHAR_DIR + "Rogue_Hooded.glb", scale: 2.0 },
+      objectStore: {
+        url: "/characters/character_orc_worge_rigged (1).glb",
+        scale: 2.0,
+      },
     },
   ].map(function (c) {
-    return Object.assign({}, c, { url: RACE_DIR + c.file });
+    // Primary model URL comes from Grudge Studio object storage (R2).
+    // Local /character/races/ FBX is kept as a dev fallback only.
+    return Object.assign({}, c, {
+      url: R2_RACES + c.id + "/model.glb",
+      localUrl: RACE_DIR + c.file,
+    });
   });
 
   const DEFAULT_CHARACTER_ID = "human";
 
-  // ?store=1 (default) returns the ObjectStore (DRACO GLB) variant of the
-  // requested race; ?store=0 falls back to the local Toon_RTS FBX. The
-  // boot module puts DRACOLoader on window.THREE_DRACOLoader and hands it
-  // to a window.THREE_GLTFLoader so script.js can decompress KayKit GLBs.
+  // Default is now local Toon_RTS FBX (/character/races/). Pass ?store=1
+  // in the URL to opt into the ObjectStore (DRACO GLB) CDN variant instead.
   function _withStoreVariant(c, useStore) {
     if (!c) return c;
     if (useStore && c.objectStore && c.objectStore.url) {
@@ -234,8 +253,15 @@
   }
 
   function resolveCharacter() {
-    let useStore = true;
+    let useStore = false;
     let requested = null;
+    let activeBuild = null;
+    try {
+      const raw = sessionStorage.getItem("grudge_active_build");
+      if (raw) activeBuild = JSON.parse(raw);
+    } catch (e) {
+      /* no-op */
+    }
     try {
       const params = new URLSearchParams(window.location.search);
       requested = params.get("char");
@@ -245,11 +271,36 @@
     } catch (e) {
       /* no-op */
     }
+
+    // sessionStorage build (set by the creator's Play button) takes priority.
+    if (!requested && activeBuild && activeBuild.raceId) {
+      requested = activeBuild.raceId;
+    }
+
     if (requested) {
       const found = CHARACTERS.find(function (c) {
         return c.id === requested;
       });
-      if (found) return _withStoreVariant(found, useStore);
+      if (found) {
+        const resolved = _withStoreVariant(found, useStore);
+        // Override skin texture with the one the user chose in the creator.
+        if (
+          activeBuild &&
+          activeBuild.skinVariant &&
+          activeBuild.skinVariant !== "default"
+        ) {
+          return Object.assign({}, resolved, {
+            texture:
+              R2_RACES +
+              resolved.id +
+              "/skins/" +
+              activeBuild.skinVariant +
+              ".png",
+            build: activeBuild,
+          });
+        }
+        return Object.assign({}, resolved, { build: activeBuild });
+      }
     }
     const fallback =
       CHARACTERS.find(function (c) {

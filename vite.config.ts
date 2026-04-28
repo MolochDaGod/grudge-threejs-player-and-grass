@@ -155,6 +155,15 @@ export default defineConfig({
       // Allow serving files from the entire repo (character/, etc.) during dev.
       allow: [resolve(__dirname)],
     },
+    // Proxy /assets-cdn/* → assets.grudge-studio.com (R2) so dev & Vercel
+    // preview builds avoid CORS: R2 only allows grudgewarlords.com, not *.vercel.app.
+    proxy: {
+      "/assets-cdn": {
+        target: "https://assets.grudge-studio.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/assets-cdn/, ""),
+      },
+    },
   },
   build: {
     outDir: "dist",

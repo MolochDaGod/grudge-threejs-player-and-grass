@@ -4,6 +4,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    {
+      "source": "/assets-cdn/:path*",
+      "destination": "https://assets.grudge-studio.com/:path*"
+    },
     { "source": "/", "destination": "/src/landing/index.html" },
     { "source": "/play", "destination": "/src/play/index.html" },
     { "source": "/mainpanel", "destination": "/src/mainpanel/index.html" },

@@ -198,6 +198,17 @@ async function boot() {
   const status = document.getElementById("creator-status");
   if (status) status.dataset.animUrl = animationPackUrl(build.animationPack);
 
+  // Wire the "Play" button to stamp the current build into sessionStorage so
+  // player-config.js can read it on the /play page.
+  const playLink = document.getElementById("play-link") as HTMLAnchorElement | null;
+  if (playLink) {
+    playLink.addEventListener("click", (e) => {
+      try {
+        sessionStorage.setItem("grudge_active_build", JSON.stringify(build));
+      } catch (_) { /* storage full / private mode */ }
+    });
+  }
+
   renderAll();
 }
 
