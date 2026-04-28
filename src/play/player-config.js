@@ -29,28 +29,12 @@
   // but we keep local fallbacks under /character/races/ for offline dev.
   const RACE_DIR = "/character/races/";
 
-  // ── GRUDGE STUDIO OBJECT STORAGE (Cloudflare R2) ─────────────────────
-  // Same hostname check as src/shared/config.ts. On grudgewarlords.com the
-  // R2 bucket CORS allows direct access; everywhere else the /assets-cdn
-  // proxy defined in vercel.json / vite.config.ts forwards the request so
-  // there are no cross-origin issues on Vercel previews or localhost.
-  var ASSETS_URL = (function () {
-    try {
-      if (window.location.hostname === "grudgewarlords.com")
-        return "https://assets.grudge-studio.com";
-    } catch (e) { /* SSR guard */ }
-    return "/assets-cdn";
-  })();
-
-  // R2 path conventions (mirrors config.ts raceModelUrl / raceSkinUrl):
-  //   ASSETS_URL + "/characters/races/{raceId}/model.glb"
-  //   ASSETS_URL + "/characters/races/{raceId}/skins/{variant}.png"
-  //   ASSETS_URL + "/characters/races/anims/{packId}.glb"
-  var R2_RACES = ASSETS_URL + "/characters/races/";
-
   // ── LOCAL CHARACTER GLBs ─────────────────────────────────────────────
-  // KayKit GLBs served from public/characters/kaykit/ (local only, used as
-  // ?store=1 alt variant when you want to swap to the KayKit rig).
+  // The race GLBs live on disk in character/races/ and are served locally
+  // by Vite's grudgeCharacterAssets plugin (dev) and copied to dist/ at
+  // build time by grudgeCopyCharacter. This matches config.ts raceModelUrl()
+  // which explicitly uses local paths — R2 is no longer the source of truth
+  // for these files.
   const LOCAL_CHAR_DIR = "/characters/kaykit/";
   const ANIMATION_RIG_URL = LOCAL_CHAR_DIR + "Rig_Medium_General.glb";
   const ANIMATION_RIG_MOVE_URL = LOCAL_CHAR_DIR + "Rig_Medium_MovementBasic.glb";
@@ -109,10 +93,10 @@
       label: "Human (WK)",
       file: "WK_Characters.glb",
       prefix: "WK_",
-      scale: 0.08,
+      scale: 0.0008,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: R2_RACES + "human/skins/default.png",
+      texture: TEXTURE_DIR + "human/default.png",
       meta: {
         color: "#94a3b8",
         faction: "crusade",
@@ -129,10 +113,10 @@
       label: "Barbarian (BRB)",
       file: "BRB_Characters.glb",
       prefix: "BRB_",
-      scale: 0.08,
+      scale: 0.0008,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: R2_RACES + "barbarian/skins/default.png",
+      texture: TEXTURE_DIR + "barbarian/default.png",
       meta: {
         color: "#f43f5e",
         faction: "crusade",
@@ -149,10 +133,10 @@
       label: "Elf (ELF)",
       file: "ELF_Characters.glb",
       prefix: "ELF_",
-      scale: 0.08,
+      scale: 0.0008,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: R2_RACES + "elf/skins/highelves.png",
+      texture: TEXTURE_DIR + "elf/highelves.png",
       meta: {
         color: "#22d3ee",
         faction: "fabled",
@@ -169,10 +153,10 @@
       label: "Dwarf (DWF)",
       file: "DWF_Characters.glb",
       prefix: "DWF_",
-      scale: 0.07,
+      scale: 0.0007,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: R2_RACES + "dwarf/skins/default.png",
+      texture: TEXTURE_DIR + "dwarf/default.png",
       meta: {
         color: "#f59e0b",
         faction: "fabled",
@@ -189,10 +173,10 @@
       label: "Orc (ORC)",
       file: "ORC_Characters.glb",
       prefix: "ORC_",
-      scale: 0.09,
+      scale: 0.0009,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: R2_RACES + "orc/skins/default.png",
+      texture: TEXTURE_DIR + "orc/default.png",
       meta: {
         color: "#65a30d",
         faction: "legion",
@@ -209,10 +193,10 @@
       label: "Undead (UD)",
       file: "UD_Characters.glb",
       prefix: "UD_",
-      scale: 0.08,
+      scale: 0.0008,
       yOffset: 0.0,
       rigType: "bip001",
-      texture: R2_RACES + "undead/skins/default.png",
+      texture: TEXTURE_DIR + "undead/default.png",
       meta: {
         color: "#a78bfa",
         faction: "legion",
@@ -228,12 +212,8 @@
       },
     },
   ].map(function (c) {
-    // Primary model URL comes from Grudge Studio object storage (R2).
-    // Local /character/races/ FBX is kept as a dev fallback only.
-    return Object.assign({}, c, {
-      url: R2_RACES + c.id + "/model.glb",
-      localUrl: RACE_DIR + c.file,
-    });
+    // Local path matches config.ts raceModelUrl() — /character/races/{PREFIX}_Characters.glb.
+    return Object.assign({}, c, { url: RACE_DIR + c.file });
   });
 
   const DEFAULT_CHARACTER_ID = "human";
@@ -291,9 +271,9 @@
         ) {
           return Object.assign({}, resolved, {
             texture:
-              R2_RACES +
+              TEXTURE_DIR +
               resolved.id +
-              "/skins/" +
+              "/" +
               activeBuild.skinVariant +
               ".png",
             build: activeBuild,

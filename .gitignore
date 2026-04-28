@@ -45,3 +45,4 @@ character/*.glb
 Character-Animator-Mapper.zip
 Character-Animator-Mapper/
 .vercel
+.env*.local

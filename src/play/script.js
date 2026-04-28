@@ -18585,42 +18585,25 @@ var Player = class {
     this._loadModelFile(character.url)
       .then((gltf) => this._onCharacterLoaded(gltf, character, cfg))
       .catch((err) => {
-        console.warn("[Player] failed to load R2 model", character.url, err);
-        // Try the local Toon_RTS FBX (if resolveCharacter() set localUrl).
-        const nextUrl = character.localUrl || PLAYER_FALLBACK_URL;
-        if (character.url !== nextUrl) {
-          this._loadModelFile(nextUrl)
+        console.warn("[Player] failed to load character", character.url, err);
+        if (character.url !== PLAYER_FALLBACK_URL) {
+          this._loadModelFile(PLAYER_FALLBACK_URL)
             .then((gltf) =>
               this._onCharacterLoaded(
                 gltf,
-                Object.assign({}, character, { url: nextUrl }),
+                {
+                  id: "soldier",
+                  url: PLAYER_FALLBACK_URL,
+                  scale: 1,
+                  yOffset: 0,
+                  rigType: "mixamo",
+                },
                 cfg,
               ),
             )
-            .catch((e) => {
-              // Last resort: orc worge.
-              if (nextUrl !== PLAYER_FALLBACK_URL) {
-                this._loadModelFile(PLAYER_FALLBACK_URL)
-                  .then((gltf) =>
-                    this._onCharacterLoaded(
-                      gltf,
-                      {
-                        id: "soldier",
-                        url: PLAYER_FALLBACK_URL,
-                        scale: 1,
-                        yOffset: 0,
-                        rigType: "mixamo",
-                      },
-                      cfg,
-                    ),
-                  )
-                  .catch((e2) =>
-                    console.error("[Player] all fallbacks failed", e2),
-                  );
-              } else {
-                console.error("[Player] fallback model also failed", e);
-              }
-            });
+            .catch((e) =>
+              console.error("[Player] fallback model also failed", e),
+            );
         }
       });
   }

@@ -76,12 +76,12 @@ export const RACE_PREFIX: Record<string, string> = {
 
 // Race-specific scale to keep all characters at ~similar visual height.
 const RACE_SCALE: Record<string, number> = {
-  human: 0.04,
-  barbarian: 0.04,
-  elf: 0.04,
-  dwarf: 0.035,
-  orc: 0.045,
-  undead: 0.04,
+  human: 0.0004,
+  barbarian: 0.0004,
+  elf: 0.0004,
+  dwarf: 0.00035,
+  orc: 0.00045,
+  undead: 0.0004,
 };
 
 export interface CharacterPreviewOptions {
