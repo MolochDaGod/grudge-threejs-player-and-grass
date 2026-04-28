@@ -19,6 +19,15 @@ artifacts
 playwright-report
 test-results
 .playwright
+.vercel
+
+# ── 1.5 GB Unity Player.prefab Animator FBX pack ── dev-only. The Vite
+# grudgeCharacterAssets plugin serves /Character-Animator-Mapper/* from
+# the repo at runtime in dev, but on Vercel we never want to upload it
+# (it would blow past the 1 GB single-file limit and the 100 MB function
+# bundle limit).
+Character-Animator-Mapper.zip
+Character-Animator-Mapper/
 
 # ── Tests + tooling that the runtime doesn't need at request time. We do
 # NOT ignore package.json / package-lock.json / scripts/ / vite.config.ts /

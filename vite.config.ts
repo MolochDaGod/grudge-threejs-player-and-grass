@@ -14,8 +14,15 @@
 // Vite's `publicDir`. The race GLBs + skin PNGs are also mirrored on R2 at
 // `https://assets.grudge-studio.com/characters/...` for prod.
 import { defineConfig, type Plugin } from "vite";
-import { resolve, join, dirname } from "node:path";
-import { createReadStream, statSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
+import { resolve, join, dirname, relative } from "node:path";
+import {
+  createReadStream,
+  statSync,
+  existsSync,
+  mkdirSync,
+  copyFileSync,
+  readdirSync,
+} from "node:fs";
 
 /** Serve `/character/*` (race GLBs + animation packs + textures) directly
  *  from the repo root during dev so the existing relative paths in
@@ -51,6 +58,45 @@ function grudgeCopyScriptJs(): Plugin {
         // eslint-disable-next-line no-console
         console.log(`[grudge-copy-script-js] ${rel} → dist/${rel}`);
       }
+    },
+  };
+}
+
+/** Copy `character/` (race GLBs, anim packs, baked diffuse textures) into
+ *  dist/character/ at build time so the deployed site can serve them at
+ *  /character/... — Vite only serves files under `outDir` in production,
+ *  and we don't want to move 300+ MB of textures into public/ (which Vite
+ *  would re-copy on every dev start). The Vite dev server already serves
+ *  /character/* live via grudgeCharacterAssets() above. */
+function grudgeCopyCharacter(): Plugin {
+  const root = resolve(__dirname);
+  const srcDir = resolve(root, "character");
+  const outDir = resolve(root, "dist", "character");
+  function copyRecursive(from: string, to: string, count = { n: 0 }) {
+    const stat = statSync(from);
+    if (stat.isDirectory()) {
+      mkdirSync(to, { recursive: true });
+      for (const name of readdirSync(from)) {
+        copyRecursive(join(from, name), join(to, name), count);
+      }
+    } else {
+      mkdirSync(dirname(to), { recursive: true });
+      copyFileSync(from, to);
+      count.n++;
+    }
+    return count.n;
+  }
+  return {
+    name: "grudge-copy-character",
+    apply: "build",
+    closeBundle() {
+      if (!existsSync(srcDir)) return;
+      const counter = { n: 0 };
+      copyRecursive(srcDir, outDir, counter);
+      // eslint-disable-next-line no-console
+      console.log(
+        `[grudge-copy-character] copied ${counter.n} files from character/ → dist/character/`
+      );
     },
   };
 }
@@ -127,5 +173,5 @@ export default defineConfig({
   // root is the source of truth for development; production deploys override
   // these via Vercel project env vars.
   envPrefix: ["VITE_"],
-  plugins: [grudgeCharacterAssets(), grudgeCopyScriptJs()],
+  plugins: [grudgeCharacterAssets(), grudgeCopyScriptJs(), grudgeCopyCharacter()],
 });

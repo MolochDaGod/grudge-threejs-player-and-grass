@@ -44,3 +44,4 @@ character/*.glb
 # the raw FBXs to Vercel.
 Character-Animator-Mapper.zip
 Character-Animator-Mapper/
+.vercel
