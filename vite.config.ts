@@ -14,14 +14,47 @@
 // Vite's `publicDir`. The race GLBs + skin PNGs are also mirrored on R2 at
 // `https://assets.grudge-studio.com/characters/...` for prod.
 import { defineConfig, type Plugin } from "vite";
-import { resolve, join } from "node:path";
-import { createReadStream, statSync, existsSync } from "node:fs";
+import { resolve, join, dirname } from "node:path";
+import { createReadStream, statSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 
 /** Serve `/character/*` (race GLBs + animation packs + textures) directly
  *  from the repo root during dev so the existing relative paths in
  *  `src/play/player-config.js` keep working without copying the 3 MB of
  *  GLBs into `public/`. Production reads from R2 via
  *  `https://assets.grudge-studio.com/characters/...`. */
+/** Copy src/play/script.js (the bundled three.js scene + Player class — it's
+ *  loaded via runtime `loadScript("/src/play/script.js")` from the boot
+ *  module, NOT via a static <script> tag, so Vite's HTML transformer never
+ *  sees it and it would otherwise be missing from the production build).
+ *  Without this, Vercel's /play deploy 404s because the boot can't find
+ *  script.js at runtime. */
+function grudgeCopyScriptJs(): Plugin {
+  const root = resolve(__dirname);
+  const sources = [
+    "src/play/script.js",
+    // sandbox-spawner is also dynamically imported via boot's `import('./sandbox-spawner.js')`
+    // and Vite catches that one through the import graph, so we don't need
+    // to copy it. Same for player-config / equipment-manager / sdk-bootstrap
+    // which are referenced via static <script type="module" src="..."> tags.
+  ];
+  return {
+    name: "grudge-copy-script-js",
+    apply: "build",
+    closeBundle() {
+      const outDir = resolve(root, "dist");
+      for (const rel of sources) {
+        const from = resolve(root, rel);
+        const to = resolve(outDir, rel);
+        if (!existsSync(from)) continue;
+        mkdirSync(dirname(to), { recursive: true });
+        copyFileSync(from, to);
+        // eslint-disable-next-line no-console
+        console.log(`[grudge-copy-script-js] ${rel} → dist/${rel}`);
+      }
+    },
+  };
+}
+
 function grudgeCharacterAssets(): Plugin {
   const root = resolve(__dirname);
   return {
@@ -94,5 +127,5 @@ export default defineConfig({
   // root is the source of truth for development; production deploys override
   // these via Vercel project env vars.
   envPrefix: ["VITE_"],
-  plugins: [grudgeCharacterAssets()],
+  plugins: [grudgeCharacterAssets(), grudgeCopyScriptJs()],
 });

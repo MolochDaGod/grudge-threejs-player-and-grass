@@ -769,7 +769,14 @@
         // initial DOM (race-tile shells from the head HTML still render
         // immediately; tiles get filled in by buildMainPanel once Player
         // fires grudge:player-ready).
-        setTimeout(() => loadScript("./script.js").then(resolve, reject), 0);
+        //
+        // Use an ABSOLUTE URL: in production the page is served at /play
+        // (see vercel.json rewrite), and a relative "./script.js" would
+        // resolve to /script.js — which doesn't exist. Vite's grudgeCopy-
+        // ScriptJs plugin (vite.config.ts) copies src/play/script.js into
+        // dist/src/play/ so this absolute path resolves the same way in
+        // dev and prod.
+        setTimeout(() => loadScript("/src/play/script.js").then(resolve, reject), 0);
       };
       if (document.readyState === "complete") kick();
       else window.addEventListener("load", kick, { once: true });
