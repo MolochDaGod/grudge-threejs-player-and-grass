@@ -20,14 +20,13 @@ playwright-report
 test-results
 .playwright
 
-# ── Tests + tooling (not part of the runtime bundle)
+# ── Tests + tooling that the runtime doesn't need at request time. We do
+# NOT ignore package.json / package-lock.json / scripts/ / vite.config.ts /
+# tsconfig.json anymore because vercel.json now runs `npm run build` to
+# regenerate dist/ — stripping those files at upload time would make the
+# build fail with `npm error enoent Could not read package.json`.
 tests
 playwright.config.js
-package-lock.json
-package.json
-
-# ── Toolchain (kept locally for re-conversion, not for prod)
-scripts
 
 # ── Orphan UI / dev pages NOT linked from the active page. Keep
 # mainpanel.html (linked from src/index.html as "Open Full Main Panel").
