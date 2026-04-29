@@ -9,7 +9,7 @@ import { useCharacterStore } from "@/hooks/useCharacterStore";
 import { AnimationLoader } from "./AnimationLoader";
 import type { RaceConfig } from "@/types/races";
 import type { BoneNode } from "@/types/boneTree";
-import { RACE_GEAR_PRESETS } from "@/types/meshCatalog";
+import { RACE_GEAR_PRESETS, type GearPreset } from "@/types/meshCatalog";
 import { LOCOMOTION_ANIMS } from "@/types/animations";
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -132,7 +132,7 @@ function CharacterInner({ race, textureUrl }: CharacterInnerProps) {
           }
         });
         if (rootBones.length > 0) {
-          const syntheticRoot: BoneNode = rootBones.length === 1
+          const syntheticRoot: BoneNode = rootBones.length === 1 && rootBones[0]
             ? buildBoneNode(rootBones[0])
             : { name: "(skeleton)", children: rootBones.map(buildBoneNode) };
           setBoneTree(syntheticRoot);
@@ -150,11 +150,12 @@ function CharacterInner({ race, textureUrl }: CharacterInnerProps) {
         setIsLoading(false);
 
         // Auto-apply unarmed gear preset on fresh model load
-        const racePresets = RACE_GEAR_PRESETS[race.id] ?? [];
-        const unarmedPreset = racePresets.find((p) => p.id === "unarmed");
+        const racePresets: GearPreset[] = RACE_GEAR_PRESETS[race.id] ?? [];
+        const unarmedPreset = racePresets.find((p: GearPreset) => p.id === "unarmed");
+        const firstLocomotion = LOCOMOTION_ANIMS[0];
         if (unarmedPreset) {
           applyGearPreset(unarmedPreset, meshNames);
-          setCurrentAnim(LOCOMOTION_ANIMS[0]);
+          if (firstLocomotion) setCurrentAnim(firstLocomotion);
         }
       },
       undefined,
@@ -189,7 +190,7 @@ function CharacterInner({ race, textureUrl }: CharacterInnerProps) {
     mirrorPairsRef.current = [];
     if (!modelObj) return;
 
-    const MIRROR_PAIRS = [
+    const MIRROR_PAIRS: ReadonlyArray<readonly [string, string]> = [
       ["Bip001 L Clavicle",  "Bip001 R Clavicle"],
       ["Bip001 L UpperArm",  "Bip001 R UpperArm"],
       ["Bip001 L Forearm",   "Bip001 R Forearm"],

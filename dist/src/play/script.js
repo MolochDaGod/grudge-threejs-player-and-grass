@@ -18319,25 +18319,45 @@ function Pe3(f, t, e) {
 }
 
 // vfs:vfs:/src/Player.js
-var PLAYER_FALLBACK_URL = "https://threejs.org/examples/models/gltf/Soldier.glb";
+var PLAYER_FALLBACK_URL = "/characters/character_orc_worge_rigged (1).glb";
 var PLAYER_ANIMATION_STATES = ["Idle", "Walk", "Run", "Jump", "Fall"];
 var PLAYER_ANIMATION_STATES_BIP001 = [
-  "Idle", "Walk", "Run", "Jump", "Fall",
-  "Attack", "Block", "Roll", "Dodge",
-  "Skill1", "Skill2", "Skill3", "Skill4", "Skill5",
-  "Skill6", "Skill7", "Skill8", "Skill9",
+  "Idle",
+  "Walk",
+  "Run",
+  "Jump",
+  "Fall",
+  "Attack",
+  "Block",
+  "Roll",
+  "Dodge",
+  "Skill1",
+  "Skill2",
+  "Skill3",
+  "Skill4",
+  "Skill5",
+  "Skill6",
+  "Skill7",
+  "Skill8",
+  "Skill9",
 ];
 // Slot -> regex(s) matched against clip.name when harvesting from a GLB.
 // Used when no per-state file/clip is found. Jump/Fall fall back to Walk/Idle.
 var PLAYER_FALLBACK_CLIP_PATTERNS = {
   Idle: [/idle/i],
   Walk: [/walk/i],
-  Run:  [/(^|[^a-z])run([^a-z]|$)/i],
+  Run: [/(^|[^a-z])run([^a-z]|$)/i],
   Jump: [/jump/i, /walk/i],
   Fall: [/fall/i, /idle/i],
 };
 var Player = class {
-  constructor(scene, initialPosition, scale, playerGroundOcclusion2, playerCloudShadow2) {
+  constructor(
+    scene,
+    initialPosition,
+    scale,
+    playerGroundOcclusion2,
+    playerCloudShadow2,
+  ) {
     this.scene = scene;
     this.playerGroundOcclusion = playerGroundOcclusion2;
     this.playerCloudShadow = playerCloudShadow2;
@@ -18345,10 +18365,7 @@ var Player = class {
     this.group.position.copy(initialPosition);
     this.group.scale.set(scale, scale, scale);
     this.scene.add(this.group);
-    const placeholder = new Pt(
-      new cn(1, 2, 1),
-      new Tn({ color: 3381759 })
-    );
+    const placeholder = new Pt(new cn(1, 2, 1), new Tn({ color: 3381759 }));
     placeholder.castShadow = true;
     placeholder.position.y = 1;
     this.group.add(placeholder);
@@ -18365,13 +18382,11 @@ var Player = class {
   }
   _patchMaterialShaders(model) {
     model.traverse((o) => {
-      if (!o.isMesh)
-        return;
+      if (!o.isMesh) return;
       o.castShadow = true;
       o.receiveShadow = true;
       const mat = o.material;
-      if (!mat)
-        return;
+      if (!mat) return;
       mat.onBeforeCompile = (shader) => {
         shader.uniforms.uGroundHeight = this.playerGroundOcclusion.groundHeight;
         shader.uniforms.uGroundMaxHeight = this.playerGroundOcclusion.maxHeight;
@@ -18379,16 +18394,19 @@ var Player = class {
         shader.uniforms.uCloudTime = this.playerCloudShadow.time;
         shader.uniforms.uCloudScale = this.playerCloudShadow.scale;
         shader.uniforms.uCloudIntensity = this.playerCloudShadow.intensity;
-        shader.vertexShader = `
-                  varying vec3 vWorldPosition;
-                  ` + shader.vertexShader.replace(
-          "#include <worldpos_vertex>",
+        shader.vertexShader =
           `
+                  varying vec3 vWorldPosition;
+                  ` +
+          shader.vertexShader.replace(
+            "#include <worldpos_vertex>",
+            `
                      #include <worldpos_vertex>
                      vWorldPosition = vec3( worldPosition );
-                     `
-        );
-        shader.fragmentShader = `
+                     `,
+          );
+        shader.fragmentShader =
+          `
                   varying vec3 vWorldPosition;
                   uniform float uGroundHeight;
                   uniform float uGroundMaxHeight;
@@ -18416,9 +18434,10 @@ var Player = class {
                            (c - a) * u.y * (1.0 - u.x) +
                            (d - b) * u.x * u.y;
                   }
-                  ` + shader.fragmentShader.replace(
-          "#include <dithering_fragment>",
-          `
+                  ` +
+          shader.fragmentShader.replace(
+            "#include <dithering_fragment>",
+            `
                      // Ground occlusion
                      float h = clamp((vWorldPosition.y - uGroundHeight) / uGroundMaxHeight, 0.0, 1.0);
                      float occlusion = mix(uGroundStrength, 1.0, h);
@@ -18435,8 +18454,8 @@ var Player = class {
                      gl_FragColor.rgb *= (occlusion * cloudShadow);
 
                      #include <dithering_fragment>
-                     `
-        );
+                     `,
+          );
       };
       mat.needsUpdate = true;
     });
@@ -18449,18 +18468,29 @@ var Player = class {
     return found;
   }
   _detectRigFromBones(root, hint) {
-    if (hint === "mixamo" || hint === "cc" || hint === "bip001" || hint === "kaykit") return hint;
+    if (
+      hint === "mixamo" ||
+      hint === "cc" ||
+      hint === "bip001" ||
+      hint === "kaykit"
+    )
+      return hint;
     let hasMixamo = false;
     let hasCC = false;
     let hasBip001 = false;
     root.traverse((o) => {
       const n = o.name || "";
-      if (n === "R_hand_container" || n === "L_hand_container" || n === "L_shield_container") {
+      if (
+        n === "R_hand_container" ||
+        n === "L_hand_container" ||
+        n === "L_shield_container"
+      ) {
         hasBip001 = true;
       }
       if (!o.isBone) return;
       if (n.indexOf("Bip001") === 0) hasBip001 = true;
-      if (n.indexOf("mixamorig") === 0 || n.indexOf("mixamorig:") === 0) hasMixamo = true;
+      if (n.indexOf("mixamorig") === 0 || n.indexOf("mixamorig:") === 0)
+        hasMixamo = true;
       if (n.indexOf("CC_Base_") === 0) hasCC = true;
     });
     if (hasBip001) return "bip001";
@@ -18499,46 +18529,81 @@ var Player = class {
   _loadModelFile(url) {
     const isFBX = /\.fbx(\?|$)/i.test(url);
     if (isFBX) {
-      const FBXLoaderCtor = (typeof window !== "undefined") ? window.THREE_FBXLoader : null;
+      const FBXLoaderCtor =
+        typeof window !== "undefined" ? window.THREE_FBXLoader : null;
       if (!FBXLoaderCtor) {
-        return Promise.reject(new Error("FBXLoader not available on window.THREE_FBXLoader (check the boot module in index.html)"));
+        return Promise.reject(
+          new Error(
+            "FBXLoader not available on window.THREE_FBXLoader (check the boot module in index.html)",
+          ),
+        );
       }
       const fbxLoader = new FBXLoaderCtor();
       return new Promise((resolve, reject) => {
         fbxLoader.load(
           url,
-          (group) => resolve({ scene: group, animations: group.animations || [] }),
+          (group) =>
+            resolve({ scene: group, animations: group.animations || [] }),
           undefined,
-          (err) => reject(err)
+          (err) => reject(err),
         );
       });
     }
     // Prefer the boot module's DRACO-aware GLTFLoader (window.THREE_GLTFLoader
     // wired with window.THREE_DRACOLoader in index.html) so KHR_draco_mesh_-
     // compression GLBs from the Grudge ObjectStore decompress correctly.
-    const SharedGLTFLoader = (typeof window !== "undefined") ? window.THREE_GLTFLoader : null;
-    const SharedDRACOLoader = (typeof window !== "undefined") ? window.THREE_DRACOLoader : null;
+    const SharedGLTFLoader =
+      typeof window !== "undefined" ? window.THREE_GLTFLoader : null;
+    const SharedDRACOLoader =
+      typeof window !== "undefined" ? window.THREE_DRACOLoader : null;
     const gltfLoader = SharedGLTFLoader ? new SharedGLTFLoader() : new Oe2();
     if (SharedDRACOLoader && typeof gltfLoader.setDRACOLoader === "function") {
       gltfLoader.setDRACOLoader(SharedDRACOLoader);
     }
     return new Promise((resolve, reject) => {
-      gltfLoader.load(url, (gltf) => resolve(gltf), undefined, (err) => reject(err));
+      gltfLoader.load(
+        url,
+        (gltf) => resolve(gltf),
+        undefined,
+        (err) => reject(err),
+      );
     });
   }
   _loadConfiguredCharacter() {
-    const cfg = (typeof window !== "undefined") ? window.GrudgePlayerConfig : null;
-    const character = cfg && cfg.resolveCharacter
-      ? cfg.resolveCharacter()
-      : { id: "soldier", url: PLAYER_FALLBACK_URL, scale: 1, yOffset: 0, rigType: "mixamo" };
+    const cfg =
+      typeof window !== "undefined" ? window.GrudgePlayerConfig : null;
+    const character =
+      cfg && cfg.resolveCharacter
+        ? cfg.resolveCharacter()
+        : {
+            id: "soldier",
+            url: PLAYER_FALLBACK_URL,
+            scale: 1,
+            yOffset: 0,
+            rigType: "mixamo",
+          };
     this._loadModelFile(character.url)
       .then((gltf) => this._onCharacterLoaded(gltf, character, cfg))
       .catch((err) => {
-        console.warn("[Player] failed to load", character.url, err);
+        console.warn("[Player] failed to load character", character.url, err);
         if (character.url !== PLAYER_FALLBACK_URL) {
           this._loadModelFile(PLAYER_FALLBACK_URL)
-            .then((gltf) => this._onCharacterLoaded(gltf, { id: "soldier", url: PLAYER_FALLBACK_URL, scale: 1, yOffset: 0, rigType: "mixamo" }, cfg))
-            .catch((e) => console.error("[Player] fallback model also failed", e));
+            .then((gltf) =>
+              this._onCharacterLoaded(
+                gltf,
+                {
+                  id: "soldier",
+                  url: PLAYER_FALLBACK_URL,
+                  scale: 1,
+                  yOffset: 0,
+                  rigType: "mixamo",
+                },
+                cfg,
+              ),
+            )
+            .catch((e) =>
+              console.error("[Player] fallback model also failed", e),
+            );
         }
       });
   }
@@ -18578,10 +18643,20 @@ var Player = class {
     // shared EquipmentManager so the HUD / scripts can toggle armor +
     // weapons. We auto-equip body/arms/legs/head variant A so the model
     // isn't a pile of overlapping meshes.
-    if (this.rigType === "bip001" && typeof window !== "undefined" && window.GrudgeEquipmentManager) {
+    if (
+      this.rigType === "bip001" &&
+      typeof window !== "undefined" &&
+      window.GrudgeEquipmentManager
+    ) {
       try {
-        this.equipment = new window.GrudgeEquipmentManager(character.prefix || "");
+        this.equipment = new window.GrudgeEquipmentManager(
+          character.prefix || "",
+        );
         this.equipment.catalog(model);
+        // Apply the equipped loadout from the creator sessionStorage build.
+        if (character.build && character.build.equipped) {
+          this.equipment.applyLoadout(character.build.equipped);
+        }
       } catch (err) {
         console.warn("[Player] EquipmentManager.catalog failed:", err);
       }
@@ -18603,8 +18678,14 @@ var Player = class {
     if (typeof window !== "undefined") {
       window.GrudgePlayer = this;
       try {
-        window.dispatchEvent(new CustomEvent("grudge:player-ready", { detail: { player: this, character: character } }));
-      } catch (err) { /* CustomEvent unsupported in some envs */ }
+        window.dispatchEvent(
+          new CustomEvent("grudge:player-ready", {
+            detail: { player: this, character: character },
+          }),
+        );
+      } catch (err) {
+        /* CustomEvent unsupported in some envs */
+      }
     }
   }
   _classifyClip(rawName) {
@@ -18620,12 +18701,19 @@ var Player = class {
   _registerClip(slot, clip, sourceRig) {
     if (!this.mixer || this.actions[slot]) return;
     let finalClip = clip;
-    if (sourceRig === "mixamo" && (this.rigType === "cc" || this.rigType === "bip001")) {
+    if (
+      sourceRig === "mixamo" &&
+      (this.rigType === "cc" || this.rigType === "bip001")
+    ) {
       const retargeted = this._retargetMixamoToTarget(clip);
       if (retargeted) finalClip = retargeted;
       else if (!this._warnedNoSkeletonUtils) {
         this._warnedNoSkeletonUtils = true;
-        console.warn("[Player] No SkeletonUtils available; playing Mixamo clip raw on " + this.rigType + " rig. Animation may look wrong.");
+        console.warn(
+          "[Player] No SkeletonUtils available; playing Mixamo clip raw on " +
+            this.rigType +
+            " rig. Animation may look wrong.",
+        );
       }
     }
     finalClip.name = slot;
@@ -18635,10 +18723,13 @@ var Player = class {
   // character uses (CC or Bip001). The bone-name map is built once in
   // _onCharacterLoaded based on rigType.
   _retargetMixamoToTarget(clip) {
-    const SU = (typeof window !== "undefined") ? window.THREE_SkeletonUtils : null;
-    if (!SU || !SU.retargetClip || !this.targetSkinned || !this.boneNameMap) return null;
+    const SU =
+      typeof window !== "undefined" ? window.THREE_SkeletonUtils : null;
+    if (!SU || !SU.retargetClip || !this.targetSkinned || !this.boneNameMap)
+      return null;
     const sourceSkinned = this._fallbackSourceSkinned || this.targetSkinned;
-    const hipDefault = this.rigType === "bip001" ? "Bip001 Pelvis" : "CC_Base_Hip";
+    const hipDefault =
+      this.rigType === "bip001" ? "Bip001 Pelvis" : "CC_Base_Hip";
     try {
       return SU.retargetClip(this.targetSkinned, sourceSkinned, clip, {
         hip: this.boneNameMap["mixamorig:Hips"] || hipDefault,
@@ -18653,7 +18744,9 @@ var Player = class {
   }
   // Backwards-compatible alias — older callers may still reference
   // _retargetMixamoToCC.
-  _retargetMixamoToCC(clip) { return this._retargetMixamoToTarget(clip); }
+  _retargetMixamoToCC(clip) {
+    return this._retargetMixamoToTarget(clip);
+  }
   // Load a sidecar diffuse PNG and apply it to every mesh+material on the
   // loaded character. Used to texture the Toon_RTS race FBXs which ship
   // with vertex-color-only materials. Skips child meshes whose material is
@@ -18692,9 +18785,10 @@ var Player = class {
     // bundle entirely — those skeletons would corrupt the rig.
     const useExtended = this.rigType === "bip001";
     const states = useExtended
-      ? ((cfg && cfg.ANIMATION_STATES_BIP001) || PLAYER_ANIMATION_STATES_BIP001)
-      : ((cfg && cfg.ANIMATION_STATES) || PLAYER_ANIMATION_STATES);
-    const sources = cfg && cfg.animationSourcesFor ? cfg.animationSourcesFor(character) : {};
+      ? (cfg && cfg.ANIMATION_STATES_BIP001) || PLAYER_ANIMATION_STATES_BIP001
+      : (cfg && cfg.ANIMATION_STATES) || PLAYER_ANIMATION_STATES;
+    const sources =
+      cfg && cfg.animationSourcesFor ? cfg.animationSourcesFor(character) : {};
     // Bip001 races: don't skip the Mixamo Soldier.glb fallback. The
     // Mixamo->Bip001 retargeting in _registerClip lets us render basic
     // idle/walk/run on race characters until the user drops authentic
@@ -18708,11 +18802,10 @@ var Player = class {
       chain = chain.then(() => {
         if (this.actions[state]) return;
         const localUrls = sources[state] || [];
-        return this._tryLocalUrls(localUrls, 0, state, sourceRig)
-          .then((ok) => {
-            if (ok || this.actions[state] || skipFallback) return;
-            return this._fillFromFallbackBundle(state, cfg);
-          });
+        return this._tryLocalUrls(localUrls, 0, state, sourceRig).then((ok) => {
+          if (ok || this.actions[state] || skipFallback) return;
+          return this._fillFromFallbackBundle(state, cfg);
+        });
       });
     });
     chain.then(() => {
@@ -18747,7 +18840,9 @@ var Player = class {
         return true;
       })
       .catch(() => false)
-      .then((ok) => ok ? true : this._tryLocalUrls(urls, idx + 1, state, sourceRig));
+      .then((ok) =>
+        ok ? true : this._tryLocalUrls(urls, idx + 1, state, sourceRig),
+      );
   }
   _fillFromFallbackBundle(state, cfg) {
     const bundleCfg = cfg && cfg.FALLBACK_BUNDLE;
@@ -18774,41 +18869,48 @@ var Player = class {
     // animation clips are merged into a single bundle so a single bundle
     // entry can supply (e.g.) both Rig_Medium_General.glb (Idle) and
     // Rig_Medium_MovementBasic.glb (Walk/Run/Jump).
-    const urls = Array.isArray(bundleCfg.urls) && bundleCfg.urls.length
-      ? bundleCfg.urls
-      : (bundleCfg.url ? [bundleCfg.url] : []);
+    const urls =
+      Array.isArray(bundleCfg.urls) && bundleCfg.urls.length
+        ? bundleCfg.urls
+        : bundleCfg.url
+          ? [bundleCfg.url]
+          : [];
     if (!urls.length) {
       this.fallbackPromise = Promise.resolve(null);
       return this.fallbackPromise;
     }
-    const loadOne = (url) => this._loadModelFile(url)
-      .then((gltf) => {
-        if (!this._fallbackSourceSkinned) {
-          const skinned = this._findFirstSkinnedMesh(gltf.scene);
-          if (skinned) this._fallbackSourceSkinned = skinned;
-        }
-        return gltf.animations || [];
-      })
-      .catch((err) => {
-        console.warn("[Player] failed to load fallback animation bundle", url, err);
-        return [];
-      });
-    this.fallbackPromise = Promise.all(urls.map(loadOne)).then((clipsArrays) => {
-      const merged = clipsArrays.reduce((acc, a) => acc.concat(a), []);
-      if (!merged.length) return null;
-      return { clips: merged, rigType: bundleCfg.rigType || "mixamo" };
-    });
+    const loadOne = (url) =>
+      this._loadModelFile(url)
+        .then((gltf) => {
+          if (!this._fallbackSourceSkinned) {
+            const skinned = this._findFirstSkinnedMesh(gltf.scene);
+            if (skinned) this._fallbackSourceSkinned = skinned;
+          }
+          return gltf.animations || [];
+        })
+        .catch((err) => {
+          console.warn(
+            "[Player] failed to load fallback animation bundle",
+            url,
+            err,
+          );
+          return [];
+        });
+    this.fallbackPromise = Promise.all(urls.map(loadOne)).then(
+      (clipsArrays) => {
+        const merged = clipsArrays.reduce((acc, a) => acc.concat(a), []);
+        if (!merged.length) return null;
+        return { clips: merged, rigType: bundleCfg.rigType || "mixamo" };
+      },
+    );
     return this.fallbackPromise;
   }
   setAnimationState(name, fadeDuration, speed) {
-    if (!this.mixer)
-      return;
+    if (!this.mixer) return;
     const next = this.actions[name];
-    if (!next)
-      return;
+    if (!next) return;
     if (this.currentAction !== next) {
-      if (this.currentAction)
-        this.currentAction.fadeOut(fadeDuration);
+      if (this.currentAction) this.currentAction.fadeOut(fadeDuration);
       next.reset().fadeIn(fadeDuration).play();
       this.currentAction = next;
     }
@@ -18831,7 +18933,7 @@ var Player = class {
     const fade = typeof opts.fade === "number" ? opts.fade : 0.1;
     const previous = this.currentAction;
     action.reset();
-    action.setLoop(2200, 1);              // THREE.LoopOnce
+    action.setLoop(2200, 1); // THREE.LoopOnce
     action.clampWhenFinished = true;
     action.setEffectiveTimeScale(speed);
     if (previous && previous !== action) previous.fadeOut(fade);
@@ -18844,11 +18946,14 @@ var Player = class {
     if (this._oneShotTimeout) clearTimeout(this._oneShotTimeout);
     const dur = (action.getClip && action.getClip().duration) || 0.6;
     const self = this;
-    this._oneShotTimeout = setTimeout(function () {
-      self._oneShotTimeout = null;
-      // Caller restores locomotion via the next setAnimationState call.
-      if (self.currentAction === action) self.currentAction = null;
-    }, Math.max(50, (dur / Math.max(0.01, speed)) * 1000 - fade * 1000));
+    this._oneShotTimeout = setTimeout(
+      function () {
+        self._oneShotTimeout = null;
+        // Caller restores locomotion via the next setAnimationState call.
+        if (self.currentAction === action) self.currentAction = null;
+      },
+      Math.max(50, (dur / Math.max(0.01, speed)) * 1000 - fade * 1000),
+    );
     return true;
   }
   _dispatchVfx(slot) {
@@ -18859,17 +18964,21 @@ var Player = class {
     if (!vfx) return;
     try {
       const pos = this.group ? this.group.position : null;
-      window.dispatchEvent(new CustomEvent("grudge:vfx", {
-        detail: {
-          slot: slot,
-          kind: vfx.kind,
-          color: vfx.color,
-          duration: vfx.duration,
-          sound: vfx.sound,
-          position: pos ? { x: pos.x, y: pos.y, z: pos.z } : null,
-        },
-      }));
-    } catch (err) { /* CustomEvent unsupported in some envs */ }
+      window.dispatchEvent(
+        new CustomEvent("grudge:vfx", {
+          detail: {
+            slot: slot,
+            kind: vfx.kind,
+            color: vfx.color,
+            duration: vfx.duration,
+            sound: vfx.sound,
+            position: pos ? { x: pos.x, y: pos.y, z: pos.z } : null,
+          },
+        }),
+      );
+    } catch (err) {
+      /* CustomEvent unsupported in some envs */
+    }
   }
   // Hold-style action (Block). on=true plays in a loop, on=false fades back.
   // Blocks don't take over the locomotion clip; we just fade the held
@@ -18882,7 +18991,7 @@ var Player = class {
     const fade = typeof opts.fade === "number" ? opts.fade : 0.15;
     if (on) {
       action.reset();
-      action.setLoop(2201, Infinity);     // THREE.LoopRepeat
+      action.setLoop(2201, Infinity); // THREE.LoopRepeat
       action.clampWhenFinished = false;
       action.fadeIn(fade).play();
       this._heldAction = action;
@@ -18893,8 +19002,7 @@ var Player = class {
     return true;
   }
   update(dt) {
-    if (this.mixer)
-      this.mixer.update(dt);
+    if (this.mixer) this.mixer.update(dt);
   }
 };
 

@@ -91,8 +91,14 @@ interface CharacterStore {
   setClipMeta: (file: string, meta: ClipMeta) => void;
 }
 
+// Defaults are guaranteed because RACES and LOCOMOTION_ANIMS are non-empty
+// const arrays. The non-null assertions are required because
+// `noUncheckedIndexedAccess: true` widens indexed access to `T | undefined`.
+const DEFAULT_RACE = RACES[0]!;
+const DEFAULT_ANIM = LOCOMOTION_ANIMS[0]!;
+
 export const useCharacterStore = create<CharacterStore>((set) => ({
-  selectedRace: RACES[0],
+  selectedRace: DEFAULT_RACE,
   setSelectedRace: (race) =>
     set({
       selectedRace: race,
@@ -107,10 +113,10 @@ export const useCharacterStore = create<CharacterStore>((set) => ({
       boneTree: null,
     }),
 
-  selectedTextureUrl: RACES[0].textureUrl,
+  selectedTextureUrl: DEFAULT_RACE.textureUrl,
   setSelectedTextureUrl: (selectedTextureUrl) => set({ selectedTextureUrl }),
 
-  currentAnim: LOCOMOTION_ANIMS[0],
+  currentAnim: DEFAULT_ANIM,
   setCurrentAnim: (anim) => set({ currentAnim: anim, animTrimStart: 0, animTrimEnd: 100, animFrameCount: 0, animPaused: false, animProgress: 0, animScrubTo: null }),
 
   activeWeapon: "unarmed",
@@ -122,7 +128,7 @@ export const useCharacterStore = create<CharacterStore>((set) => ({
     const hidden = new Set(allMeshNames.filter((n) => !visibleSet.has(n)));
 
     const pack = WEAPON_PACKS.find((p) => p.weapon === preset.animPack);
-    const firstAnim = pack ? pack.anims[0] : LOCOMOTION_ANIMS[0];
+    const firstAnim = (pack?.anims[0] ?? DEFAULT_ANIM) as AnimationClip;
 
     set({
       gearPresetId: preset.id,

@@ -20,6 +20,7 @@
     "types": ["vite/client", "node"],
     "baseUrl": ".",
     "paths": {
+      "@/*": ["src/landing/*"],
       "@shared/*": ["src/shared/*"],
       "@play/*": ["src/play/*"],
       "@landing/*": ["src/landing/*"],
