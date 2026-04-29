@@ -1,66 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Grudge Studio · Character Creator</title>
-  <meta name="theme-color" content="#1a120c" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="mask-icon" href="/favicon-mask.svg" color="#c9950a" />
-  <link rel="stylesheet" href="./style.css" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap"
-    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; overflow: hidden; }
+  </style>
 </head>
-
-<body>
-  <div id="creator-shell">
-    <!-- Left rail: race / class / skin / animation pickers (Phase 2.2) -->
-    <aside id="creator-left" class="creator-rail">
-      <header class="creator-title">Grudge · Creator</header>
-      <section class="creator-section" data-section="race">
-        <h3>Race</h3>
-        <div id="race-tiles" class="picker-grid"></div>
-      </section>
-      <section class="creator-section" data-section="skin">
-        <h3>Skin</h3>
-        <div id="skin-buttons" class="picker-row"></div>
-      </section>
-      <section class="creator-section" data-section="class">
-        <h3>Class</h3>
-        <div id="class-buttons" class="picker-row"></div>
-      </section>
-      <section class="creator-section" data-section="anim">
-        <h3>Animation Pack</h3>
-        <div id="anim-buttons" class="picker-row"></div>
-      </section>
-      <footer class="creator-footer">
-        <a id="play-link" class="btn-primary" href="/play">Play in Grass Scene →</a>
-      </footer>
-    </aside>
-
-    <!-- Center: 3D character preview (Phase 2.2) -->
-    <main id="creator-stage">
-      <canvas id="creator-canvas"></canvas>
-      <div id="creator-hud">
-        <div id="creator-name">Loading…</div>
-        <div id="creator-status"></div>
-      </div>
-    </main>
-
-    <!-- Right rail: mainpanel iframe (drives equipment via postMessage) -->
-    <aside id="creator-right">
-      <iframe
-        id="mainpanel-iframe"
-        title="Mainpanel"
-        src="/mainpanel?creator=1"
-        loading="eager"
-      ></iframe>
-    </aside>
-  </div>
-
-  <script type="module" src="./main.ts"></script>
+<body class="bg-slate-900">
+  <div id="root"></div>
+  <script type="module" src="./main.tsx"></script>
 </body>
-
 </html>

@@ -2,7 +2,7 @@
 //
 // Multi-page Vite build for grudge-threejs-player-and-grass.
 //
-//   /             → src/landing/index.html (character creator)
+//   /             → src/landing/index.html (character creator — React)
 //   /play         → src/play/index.html    (grass scene + HUD)
 //   /mainpanel    → src/mainpanel/index.html (character / inventory / equip)
 //
@@ -13,6 +13,7 @@
 // `character/`, `favicon.svg`, etc. live at the repo root and are served by
 // Vite's `publicDir`. The race GLBs + skin PNGs are also mirrored on R2 at
 // `https://assets.grudge-studio.com/characters/...` for prod.
+import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 import { resolve, join, dirname, relative } from "node:path";
 import {
@@ -141,6 +142,7 @@ export default defineConfig({
   publicDir: "public",
   resolve: {
     alias: {
+      "@": resolve(__dirname, "src/landing"),
       "@shared": resolve(__dirname, "src/shared"),
       "@play": resolve(__dirname, "src/play"),
       "@landing": resolve(__dirname, "src/landing"),
@@ -182,5 +184,5 @@ export default defineConfig({
   // root is the source of truth for development; production deploys override
   // these via Vercel project env vars.
   envPrefix: ["VITE_"],
-  plugins: [grudgeCharacterAssets(), grudgeCopyScriptJs(), grudgeCopyCharacter()],
+  plugins: [react(), grudgeCharacterAssets(), grudgeCopyScriptJs(), grudgeCopyCharacter()],
 });
