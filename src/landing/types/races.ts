@@ -10,6 +10,13 @@ export interface SkinColorEntry {
 
 export interface RaceConfig {
   id: string;
+  /**
+   * Stable race ID consumed by `/play` (`src/play/player-config.js::CHARACTERS`)
+   * and the GrudgeAccountSDK CharacterBuild. Differs from `id` because the
+   * landing page uses long-form keys for its mesh / preset catalog while the
+   * player + backend use the short-form race IDs (`human`, `barbarian`, ...).
+   */
+  playId: string;
   name: string;
   abbr: string;
   color: string;
@@ -32,6 +39,7 @@ const HUMAN_SKIN_HSL = {
 export const RACES: RaceConfig[] = [
   {
     id: "barbarians",
+    playId: "barbarian",
     name: "Barbarians",
     abbr: "BRB",
     color: "#c2410c",
@@ -50,6 +58,7 @@ export const RACES: RaceConfig[] = [
   },
   {
     id: "dwarves",
+    playId: "dwarf",
     name: "Dwarves",
     abbr: "DWF",
     color: "#b45309",
@@ -68,6 +77,7 @@ export const RACES: RaceConfig[] = [
   },
   {
     id: "high-elves",
+    playId: "elf",
     name: "High Elves",
     abbr: "ELF",
     color: "#0891b2",
@@ -89,6 +99,7 @@ export const RACES: RaceConfig[] = [
   },
   {
     id: "orcs",
+    playId: "orc",
     name: "Orcs",
     abbr: "ORC",
     color: "#15803d",
@@ -110,6 +121,7 @@ export const RACES: RaceConfig[] = [
   },
   {
     id: "undead",
+    playId: "undead",
     name: "Undead",
     abbr: "UD",
     color: "#7c3aed",
@@ -131,6 +143,7 @@ export const RACES: RaceConfig[] = [
   },
   {
     id: "western-kingdoms",
+    playId: "human",
     name: "W. Kingdoms",
     abbr: "WK",
     color: "#1d4ed8",

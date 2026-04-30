@@ -33,9 +33,12 @@ export function ViewerPage() {
   const variants = selectedRace.textureVariants ?? [];
 
   function handlePlayClick() {
+    // Build payload uses the short-form race ID that /play (player-config.js)
+    // and the GrudgeAccountSDK both expect — NOT the landing-page long-form id
+    // used as the catalog key for RACE_GEAR_PRESETS / RACE_MESH_CATALOG.
     const build = {
       schemaVersion: 1,
-      raceId: selectedRace.id,
+      raceId: selectedRace.playId,
       classId: "warrior",
       skinVariant: "default",
       animationPack: "sword_shield",
@@ -43,7 +46,9 @@ export function ViewerPage() {
       hiddenMeshes: [...hiddenMeshes],
     };
     sessionStorage.setItem("grudge_active_build", JSON.stringify(build));
-    window.location.href = "/play";
+    // Also pass ?char=<playId> so /play renders the right race even if a stale
+    // sessionStorage build is missing (e.g. opened in a new tab).
+    window.location.href = `/play?char=${encodeURIComponent(selectedRace.playId)}`;
   }
 
   return (
