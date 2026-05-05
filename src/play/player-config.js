@@ -78,17 +78,13 @@
   const TEXTURE_DIR = "/character/races/textures/";
 
   // ── 6 PLAYABLE RACES ───────────────────────────────────────────────────
-  // `prefix` is the equipment-slot child-mesh prefix used by EquipmentManager
-  // logic in script.js. `rigType: "bip001"` opts the loader into the
-  // Mixamo->Bip001 retargeting path (see MIXAMO_TO_BIP001_BONE_MAP below).
-  // `meta` carries display data sourced from ObjectStore /api/v1/races.json
-  // for the centered "Main Panel" race-select grid. `objectStore.url` is the
-  // CDN GLB the user can swap to from that grid.
-  // NOTE: scale values are 2x the original sandbox values (0.04→0.08 etc.)
-  // so the race characters render at the same physical height as a tall
-  // Mixamo soldier instead of looking like dolls in the grass field.
-  // PLAYER_SCALE in script.js (which controls camera/movement physics) is
-  // intentionally NOT touched here — only the visual character mesh grows.
+  // All races use Toon_RTS Bip001 skeleton, unified Mixamo animation pack,
+  // and consistent scale of 4.2. Each race is defined by:
+  //   - id: unique race identifier
+  //   - file: local Bip001 GLB (Toon_RTS race model)
+  //   - prefix: equipment slot naming prefix (WK_, BRB_, ELF_, DWF_, ORC_, UD_)
+  //   - scale: visual render scale (unified at 4.2 across all races)
+  //   - rigType: "bip001" (no retargeting needed; already Bip001-rigged)
   const CHARACTERS = [
     {
       id: "human",
@@ -108,7 +104,6 @@
           "Versatile and adaptable — masters of none, capable of all.",
         passive: "+1 to all attributes",
       },
-      objectStore: { url: LOCAL_CHAR_DIR + "Ranger.glb", scale: 2.0 },
     },
     {
       id: "barbarian",
@@ -128,7 +123,6 @@
           "Untamed fury given form — raw power and relentless aggression.",
         passive: "+3 STR, +2 AGI, +1 VIT, +1 END, +1 TAC",
       },
-      objectStore: { url: LOCAL_CHAR_DIR + "Barbarian.glb", scale: 2.0 },
     },
     {
       id: "elf",
@@ -148,14 +142,13 @@
           "Ancient and graceful — wielders of arcane arts and deadly precision.",
         passive: "+3 INT, +2 DEX, +2 AGI, +1 WIS",
       },
-      objectStore: { url: LOCAL_CHAR_DIR + "Ranger.glb", scale: 2.0 },
     },
     {
       id: "dwarf",
       label: "Dwarf (DWF)",
       file: "DWF_Characters.glb",
       prefix: "DWF_",
-      scale: 3.5,
+      scale: 4.2,
       yOffset: 0.0,
       rigType: "bip001",
       texture: TEXTURE_DIR + "dwarf/default.png",
@@ -168,7 +161,6 @@
           "Stout mountain folk — unyielding defense and masterful craftsmanship.",
         passive: "+3 END, +2 VIT, +1 STR, +1 DEX, +1 WIS",
       },
-      objectStore: { url: LOCAL_CHAR_DIR + "Knight.glb", scale: 2.0 },
     },
     {
       id: "orc",
@@ -188,7 +180,6 @@
           "Savage brutes bred for war — crushing power and iron will.",
         passive: "+4 STR, +2 VIT, +2 END",
       },
-      objectStore: { url: LOCAL_CHAR_DIR + "Mage.glb", scale: 2.0 },
     },
     {
       id: "undead",
@@ -208,10 +199,6 @@
           "Death-touched revenants fueled by dark energy and grudges unresolved.",
         passive: "+3 VIT, +2 END, +2 WIS, +1 STR",
       },
-      objectStore: {
-        url: "/characters/character_orc_worge_rigged (1).glb",
-        scale: 2.0,
-      },
     },
   ].map(function (c) {
     // Local path matches config.ts raceModelUrl() — /character/races/{PREFIX}_Characters.glb.
@@ -220,22 +207,9 @@
 
   const DEFAULT_CHARACTER_ID = "human";
 
-  // Default is now local Toon_RTS FBX (/character/races/). Pass ?store=1
-  // in the URL to opt into the ObjectStore (DRACO GLB) CDN variant instead.
-  function _withStoreVariant(c, useStore) {
-    if (!c) return c;
-    if (useStore && c.objectStore && c.objectStore.url) {
-      return Object.assign({}, c, {
-        url: c.objectStore.url,
-        scale: c.objectStore.scale || c.scale || 1,
-        useStore: true,
-      });
-    }
-    return c;
-  }
-
+  // Resolve active character from sessionStorage build or URL param.
+  // All races use the unified Bip001 skeleton; no model variants.
   function resolveCharacter() {
-    let useStore = false;
     let requested = null;
     let activeBuild = null;
     try {
@@ -247,9 +221,6 @@
     try {
       const params = new URLSearchParams(window.location.search);
       requested = params.get("char");
-      const storeFlag = params.get("store");
-      if (storeFlag != null)
-        useStore = storeFlag !== "0" && storeFlag !== "false";
     } catch (e) {
       /* no-op */
     }
@@ -264,31 +235,26 @@
         return c.id === requested;
       });
       if (found) {
-        const resolved = _withStoreVariant(found, useStore);
         // Override skin texture with the one the user chose in the creator.
         if (
           activeBuild &&
           activeBuild.skinVariant &&
           activeBuild.skinVariant !== "default"
         ) {
-          return Object.assign({}, resolved, {
+          return Object.assign({}, found, {
             texture:
-              TEXTURE_DIR +
-              resolved.id +
-              "/" +
-              activeBuild.skinVariant +
-              ".png",
+              TEXTURE_DIR + found.id + "/" + activeBuild.skinVariant + ".png",
             build: activeBuild,
           });
         }
-        return Object.assign({}, resolved, { build: activeBuild });
+        return Object.assign({}, found, { build: activeBuild });
       }
     }
     const fallback =
       CHARACTERS.find(function (c) {
         return c.id === DEFAULT_CHARACTER_ID;
       }) || CHARACTERS[0];
-    return _withStoreVariant(fallback, useStore);
+    return fallback;
   }
 
   // ── ANIMATION STATES ───────────────────────────────────────────────────
@@ -304,105 +270,60 @@
     "RollRight",
   ];
 
-  // ── ANIMATION SOURCES (Toon_RTS Bip001 pack + Unity FBX packs) ────────
-  // Drop FBXs into ../character/races/anims/ to override per state per
-  // race, e.g.
-  //   ../character/races/anims/human.idle.fbx        (race-specific)
-  //   ../character/races/anims/idle.fbx              (shared)
-  //   ../character/races/anims/roll-left.fbx
-  // The Player class probes each candidate in order; the first that has
-  // a clip wins. Each entry can be either:
-  //   - a string URL (treated as Bip001-rigged, no retarget needed)
-  //   - { url, rig: "mixamo" | "bip001" } so the loader knows whether to
-  //     retarget via SkeletonUtils.retargetClip + MIXAMO_TO_BIP001_BONE_MAP
-  //
-  // The Bip001 .glb files in /character/races/anims/ were copied out of
-  //   F:\Documents\Toon_RTS\Toon_RTS\<Race>\animation\...
-  // — the same FBXs the Orc.prefab / Human.prefab Animator references via
-  // its TEST.controller, on the Bip001 skeleton, so they apply directly
-  // with no retargeting.
-  //
-  // The Mixamo FBXs under UNITY.* are the full Player.prefab Animator
-  // controller pack (Locomotion / Action / SwordShield / Longbow / Magic /
-  // Pistol / Rifle / Unarmed) extracted from Character-Animator-Mapper.zip.
-  // The Player class retargets them onto Bip001 at runtime.
+  // ── ANIMATION SOURCES (unified Mixamo -> Bip001) ────────────────────────
+  // All 6 races share ONE animation pack: Mixamo FBX files from the
+  // Character-Animator-Mapper extracted folders, retargeted to Bip001 at
+  // runtime via SkeletonUtils.retargetClip + MIXAMO_TO_BIP001_BONE_MAP.
+  // Drop custom race-specific FBXs into ../character/races/anims/ to override
+  // per state, e.g.
+  //   ../character/races/anims/human.idle.fbx        (race-specific override)
+  //   ../character/races/anims/idle.fbx              (shared fallback)
+  // The Player class probes local overrides first, then falls back to
+  // the unified Mixamo sources. Each entry is { url, rig: "mixamo" }
+  // to enable retargeting.
   const ANIM_DIR = "/character/races/anims/";
   const SHARED_ANIMS = {
     // ── Locomotion ────────────────────────────────────────────────────
-    Idle: [ANIM_DIR + "idle.fbx", mixamo(UNITY.locomotion + "idle.fbx")],
-    Walk: [ANIM_DIR + "walk.fbx", mixamo(UNITY.locomotion + "walking.fbx")],
-    Run: [ANIM_DIR + "run.fbx", mixamo(UNITY.locomotion + "running.fbx")],
-    Jump: [
-      mixamo(UNITY.locomotion + "jump.fbx"),
-      mixamo(UNITY.action + "jumping up.fbx"),
-    ],
-    Fall: [
-      mixamo(UNITY.action + "falling idle.fbx"),
-      mixamo(UNITY.action + "hard landing.fbx"),
-    ],
+    Idle: [mixamo(UNITY.locomotion + "idle.fbx")],
+    Walk: [mixamo(UNITY.locomotion + "walking.fbx")],
+    Run: [mixamo(UNITY.locomotion + "running.fbx")],
+    Jump: [mixamo(UNITY.locomotion + "jump.fbx")],
+    Fall: [mixamo(UNITY.action + "falling idle.fbx")],
     StrafeL: [mixamo(UNITY.locomotion + "left strafe walking.fbx")],
     StrafeR: [mixamo(UNITY.locomotion + "right strafe walking.fbx")],
     TurnL: [mixamo(UNITY.locomotion + "left turn 90.fbx")],
     TurnR: [mixamo(UNITY.locomotion + "right turn 90.fbx")],
     // ── Sword & Shield combat ─────────────────────────────────────────
-    Attack: [
-      ANIM_DIR + "attack.fbx",
-      mixamo(UNITY.sword + "sword and shield attack.fbx"),
-    ],
+    Attack: [mixamo(UNITY.sword + "sword and shield attack.fbx")],
     Attack2: [mixamo(UNITY.sword + "sword and shield attack (2).fbx")],
     Attack3: [mixamo(UNITY.sword + "sword and shield attack (3).fbx")],
     Attack4: [mixamo(UNITY.sword + "sword and shield attack (4).fbx")],
-    Block: [
-      mixamo(UNITY.sword + "sword and shield block.fbx"),
-      mixamo(UNITY.sword + "sword and shield block idle.fbx"),
-    ],
+    Block: [mixamo(UNITY.sword + "sword and shield block.fbx")],
     DrawSword: [mixamo(UNITY.sword + "draw sword 1.fbx")],
     SheathSword: [mixamo(UNITY.sword + "sheath sword 1.fbx")],
-    // ── Roll / Dodge / Dash (closest matches from action / locomotion packs) ──
+    // ── Roll / Dodge / Dash ───────────────────────────────────────────
     Roll: [mixamo(UNITY.action + "falling to roll.fbx")],
-    RollLeft: [
-      mixamo(UNITY.action + "falling to roll.fbx"),
-      mixamo(UNITY.locomotion + "left strafe.fbx"),
-    ],
-    RollRight: [
-      mixamo(UNITY.action + "falling to roll.fbx"),
-      mixamo(UNITY.locomotion + "right strafe.fbx"),
-    ],
-    Dodge: [
-      mixamo(UNITY.action + "falling to roll.fbx"),
-      ANIM_DIR + "run-back.fbx",
-    ],
+    RollLeft: [mixamo(UNITY.locomotion + "left strafe.fbx")],
+    RollRight: [mixamo(UNITY.locomotion + "right strafe.fbx")],
+    Dodge: [mixamo(UNITY.action + "falling to roll.fbx")],
     Dash: [mixamo(UNITY.locomotion + "running.fbx")],
-    // ── Climbing / Sneaking (cover→stand stand-ins until real climb pack) ──
-    Climb: [
-      mixamo(UNITY.action + "stand to cover.fbx"),
-      mixamo(UNITY.action + "cover to stand.fbx"),
-    ],
+    // ── Climbing / Sneaking ───────────────────────────────────────────
+    Climb: [mixamo(UNITY.action + "stand to cover.fbx")],
     Sneak: [mixamo(UNITY.action + "crouched sneaking left.fbx")],
     SneakL: [mixamo(UNITY.action + "left cover sneak.fbx")],
     SneakR: [mixamo(UNITY.action + "right cover sneak.fbx")],
-    // ── Swim (no source pack — degrade gracefully to walk loop) ───────
+    // ── Swim ───────────────────────────────────────────────────────────
     Swim: [mixamo(UNITY.locomotion + "walking.fbx")],
-    // ── Unarmed strikes (kick maps to lead jab as closest unarmed strike) ──
+    // ── Unarmed strikes ────────────────────────────────────────────────
     Kick: [mixamo(UNITY.unarmed + "lead_jab.fbx")],
     Punch: [mixamo(UNITY.unarmed + "lead_jab.fbx")],
     // ── Magic / Cast / Teleport / Spell VFX triggers ──────────────────
-    Cast: [
-      ANIM_DIR + "cast.fbx",
-      mixamo(UNITY.magic + "Standing 1H Magic Attack 01.fbx"),
-    ],
+    Cast: [mixamo(UNITY.magic + "Standing 1H Magic Attack 01.fbx")],
     Cast2H: [mixamo(UNITY.magic + "Standing 2H Magic Area Attack 02.fbx")],
-    Teleport: [
-      mixamo(UNITY.magic + "Standing 2H Magic Area Attack 02.fbx"),
-      mixamo(UNITY.magic + "Standing Jump.fbx"),
-    ],
+    Teleport: [mixamo(UNITY.magic + "Standing 2H Magic Area Attack 02.fbx")],
     Channel: [mixamo(UNITY.magic + "standing idle.fbx")],
     // ── Death / hit reacts ────────────────────────────────────────────
-    Death: [
-      ANIM_DIR + "death.fbx",
-      mixamo(UNITY.magic + "Standing React Death Backward.fbx"),
-      mixamo(UNITY.sword + "sword and shield death.fbx"),
-    ],
+    Death: [mixamo(UNITY.magic + "Standing React Death Backward.fbx")],
     HitLarge: [mixamo(UNITY.magic + "Standing React Large From Front.fbx")],
     HitSmall: [mixamo(UNITY.magic + "Standing React Small From Front.fbx")],
     // ── Bow / Longbow ─────────────────────────────────────────────────
@@ -420,18 +341,9 @@
     // ── Hotbar skills 1-9 ─────────────────────────────────────────────
     // Map each numeric slot to a thematic combat / utility move so a fresh
     // character has every hotkey doing something different.
-    Skill1: [
-      ANIM_DIR + "attack.fbx",
-      mixamo(UNITY.sword + "sword and shield attack.fbx"),
-    ],
-    Skill2: [
-      ANIM_DIR + "attack-spear.fbx",
-      mixamo(UNITY.sword + "sword and shield attack (2).fbx"),
-    ],
-    Skill3: [
-      ANIM_DIR + "cast.fbx",
-      mixamo(UNITY.magic + "Standing 1H Magic Attack 01.fbx"),
-    ],
+    Skill1: [mixamo(UNITY.sword + "sword and shield attack.fbx")],
+    Skill2: [mixamo(UNITY.sword + "sword and shield attack (2).fbx")],
+    Skill3: [mixamo(UNITY.magic + "Standing 1H Magic Attack 01.fbx")],
     Skill4: [mixamo(UNITY.magic + "Standing 2H Magic Area Attack 02.fbx")], // teleport / aoe
     Skill5: [mixamo(UNITY.action + "falling to roll.fbx")], // roll
     Skill6: [mixamo(UNITY.unarmed + "lead_jab.fbx")], // kick / punch
@@ -502,20 +414,12 @@
     },
   };
 
-  // Normalize one source entry into { url, rig }. Strings default to the
-  // caller's rig hint (passed in from animationSourcesFor).
-  function _normalizeAnimSource(entry, defaultRig) {
-    if (typeof entry === "string") return { url: entry, rig: defaultRig };
-    if (entry && typeof entry === "object" && entry.url) {
-      return { url: entry.url, rig: entry.rig || defaultRig };
-    }
-    return null;
-  }
-
+  // Build animation source map for a character. Supports per-race overrides
+  // that exist at ANIM_DIR (e.g. character.id.idle.fbx) as well as state-
+  // specific overrides (e.g. idle.fbx). All sources are Mixamo-rigged and
+  // will be retargeted to Bip001 at runtime.
   function animationSourcesFor(character) {
     const sources = {};
-    // Cover both the legacy state list and the extended Bip001 list so
-    // races and non-races both get hits.
     const allStates = ANIMATION_STATES.concat(
       ANIMATION_STATES_BIP001.filter(function (s) {
         return ANIMATION_STATES.indexOf(s) === -1;
@@ -527,24 +431,16 @@
         .replace("rollleft", "roll-left")
         .replace("rollright", "roll-right");
       const shared = SHARED_ANIMS[state] || [];
-      // Per-race overrides + generic local Bip001 anims first, then the
-      // shared list (which can mix Bip001 GLBs and Mixamo FBXs).
-      const local = [
-        ANIM_DIR + character.id + "." + lower + ".fbx",
-        ANIM_DIR + character.id + "." + lower + ".glb",
-        ANIM_DIR + lower + ".fbx",
-        ANIM_DIR + lower + ".glb",
-      ];
-      sources[state] = local
-        .map(function (s) {
-          return _normalizeAnimSource(s, "bip001");
-        })
-        .concat(
-          shared.map(function (s) {
-            return _normalizeAnimSource(s, "bip001");
-          }),
-        )
-        .filter(Boolean);
+      // Per-race overrides first, then shared Mixamo sources
+      const racePrefixed = {
+        url: ANIM_DIR + character.id + "." + lower + ".fbx",
+        rig: "bip001",
+      };
+      const raceGeneric = {
+        url: ANIM_DIR + lower + ".fbx",
+        rig: "bip001",
+      };
+      sources[state] = [racePrefixed, raceGeneric].concat(shared);
     });
     return sources;
   }
