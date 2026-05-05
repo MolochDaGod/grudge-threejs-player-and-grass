@@ -12,6 +12,8 @@ import type { BoneNode } from "@/types/boneTree";
 import { RACE_GEAR_PRESETS, type GearPreset } from "@/types/meshCatalog";
 import { LOCOMOTION_ANIMS } from "@/types/animations";
 
+const _textureLoader = new THREE.TextureLoader();
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -52,6 +54,7 @@ function CharacterInner({ race, textureUrl }: CharacterInnerProps) {
     setAnimProgress,
     animScrubTo,
     setAnimScrubTo,
+    selectedSkinTint,
   } = useCharacterStore();
 
   const groupRef = useRef<THREE.Group>(null);
@@ -168,6 +171,74 @@ function CharacterInner({ race, textureUrl }: CharacterInnerProps) {
 
     return () => { cancelled = true; };
   }, [race.modelUrl, race.id, setMeshNames, setIsLoading, setLoadError, setBoneTree, applyGearPreset, setCurrentAnim]);
+
+  // ── Apply selected texture to all model materials ──────────────────
+  const origMaterialMapRef = useRef<Map<string, THREE.Texture | null>>(new Map());
+
+  useEffect(() => {
+    if (!modelObj) return;
+    // If no user-selected texture, restore originals (if any were saved)
+    if (!textureUrl) {
+      modelObj.traverse((child) => {
+        if (!(child instanceof THREE.Mesh || child instanceof THREE.SkinnedMesh)) return;
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((m) => {
+          const std = m as THREE.MeshStandardMaterial;
+          const orig = origMaterialMapRef.current.get(child.uuid + ":" + std.uuid);
+          if (orig !== undefined) {
+            std.map = orig;
+            std.needsUpdate = true;
+          }
+        });
+      });
+      return;
+    }
+
+    _textureLoader.load(textureUrl, (tex) => {
+      tex.flipY = false;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+
+      modelObj.traverse((child) => {
+        if (!(child instanceof THREE.Mesh || child instanceof THREE.SkinnedMesh)) return;
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((m) => {
+          const std = m as THREE.MeshStandardMaterial;
+          const key = child.uuid + ":" + std.uuid;
+          // Save original map once
+          if (!origMaterialMapRef.current.has(key)) {
+            origMaterialMapRef.current.set(key, std.map);
+          }
+          std.map = tex;
+          std.needsUpdate = true;
+        });
+      });
+    });
+  }, [modelObj, textureUrl]);
+
+  // ── Apply skin tint colour ────────────────────────────────────────
+  useEffect(() => {
+    if (!modelObj) return;
+
+    modelObj.traverse((child) => {
+      if (!(child instanceof THREE.Mesh || child instanceof THREE.SkinnedMesh)) return;
+      // Only tint body / head / arm meshes (skip weapons, shields, extras)
+      const n = child.name.toLowerCase();
+      const isSkinMesh = n.includes("head") || n.includes("arm") || n.includes("body") || n.includes("leg");
+      if (!isSkinMesh) return;
+
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      mats.forEach((m) => {
+        const std = m as THREE.MeshStandardMaterial;
+        if (selectedSkinTint) {
+          std.color.set(selectedSkinTint);
+        } else {
+          std.color.set(0xffffff); // reset to neutral
+        }
+        std.needsUpdate = true;
+      });
+    });
+  }, [modelObj, selectedSkinTint]);
 
   // Mesh visibility + wireframe
   useEffect(() => {

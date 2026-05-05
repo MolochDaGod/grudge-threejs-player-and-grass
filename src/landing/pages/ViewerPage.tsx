@@ -28,6 +28,9 @@ export function ViewerPage() {
     selectedTextureUrl,
     setSelectedTextureUrl,
     hiddenMeshes,
+    gearPresetId,
+    activeWeapon,
+    selectedSkinTint,
   } = useCharacterStore();
 
   const variants = selectedRace.textureVariants ?? [];
@@ -36,12 +39,20 @@ export function ViewerPage() {
     // Build payload uses the short-form race ID that /play (player-config.js)
     // and the GrudgeAccountSDK both expect — NOT the landing-page long-form id
     // used as the catalog key for RACE_GEAR_PRESETS / RACE_MESH_CATALOG.
+
+    // Derive skin variant name from the texture URL for /play consumption.
+    // e.g. "/character/races/textures/barbarian/default.png" → "default"
+    const skinFileName = selectedTextureUrl.split("/").pop()?.replace(/\.png$/i, "") ?? "default";
+
     const build = {
       schemaVersion: 1,
       raceId: selectedRace.playId,
-      classId: "warrior",
-      skinVariant: "default",
-      animationPack: "sword_shield",
+      classId: gearPresetId ?? "warrior",
+      skinVariant: skinFileName,
+      skinTint: selectedSkinTint ?? null,
+      textureUrl: selectedTextureUrl,
+      animationPack: activeWeapon ?? "sword_shield",
+      gearPresetId: gearPresetId ?? null,
       equipped: {},
       hiddenMeshes: [...hiddenMeshes],
     };
