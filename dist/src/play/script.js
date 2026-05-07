@@ -18363,7 +18363,9 @@ var Player = class {
     this.playerCloudShadow = playerCloudShadow2;
     this.group = new Ge();
     this.group.position.copy(initialPosition);
-    this.group.scale.set(scale, scale, scale);
+    // Keep the gameplay transform unscaled; model sizing is handled by
+    // character config (`character.scale`) in _onCharacterLoaded.
+    this.group.scale.set(1, 1, 1);
     this.scene.add(this.group);
     const placeholder = new Pt(new cn(1, 2, 1), new Tn({ color: 3381759 }));
     placeholder.castShadow = true;

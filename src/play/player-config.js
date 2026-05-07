@@ -282,6 +282,64 @@
   // the unified Mixamo sources. Each entry is { url, rig: "mixamo" }
   // to enable retargeting.
   const ANIM_DIR = "/character/races/anims/";
+  const MOBILE_ANIMS = {
+    idle: bip001(ANIM_DIR + "idle.glb"),
+    walk: bip001(ANIM_DIR + "walk.glb"),
+    run: bip001(ANIM_DIR + "run.glb"),
+    attack: bip001(ANIM_DIR + "attack.glb"),
+    attackSpear: bip001(ANIM_DIR + "attack-spear.glb"),
+    cast: bip001(ANIM_DIR + "cast.glb"),
+    death: bip001(ANIM_DIR + "death.glb"),
+  };
+  const WEAPON_SKILL_OVERRIDES = {
+    unarmed: {
+      Attack: [MOBILE_ANIMS.attack],
+      Skill1: [MOBILE_ANIMS.attack],
+      Skill2: [MOBILE_ANIMS.attack],
+    },
+    sword_shield: {
+      Idle: [MOBILE_ANIMS.idle],
+      Walk: [MOBILE_ANIMS.walk],
+      Run: [MOBILE_ANIMS.run],
+      Attack: [MOBILE_ANIMS.attack],
+      Skill1: [MOBILE_ANIMS.attack],
+      Skill2: [MOBILE_ANIMS.attack],
+      Death: [MOBILE_ANIMS.death],
+    },
+    spear_melee: {
+      Idle: [MOBILE_ANIMS.idle],
+      Walk: [MOBILE_ANIMS.walk],
+      Run: [MOBILE_ANIMS.run],
+      Attack: [MOBILE_ANIMS.attackSpear],
+      Skill1: [MOBILE_ANIMS.attackSpear],
+      Skill2: [MOBILE_ANIMS.attackSpear],
+      Death: [MOBILE_ANIMS.death],
+    },
+    magic: {
+      Idle: [MOBILE_ANIMS.idle],
+      Cast: [MOBILE_ANIMS.cast],
+      Skill3: [MOBILE_ANIMS.cast],
+      Skill4: [MOBILE_ANIMS.cast],
+      Skill9: [MOBILE_ANIMS.cast],
+      Death: [MOBILE_ANIMS.death],
+    },
+    longbow: {
+      Idle: [MOBILE_ANIMS.idle],
+      Walk: [MOBILE_ANIMS.walk],
+      Run: [MOBILE_ANIMS.run],
+      Attack: [MOBILE_ANIMS.attack],
+      Skill7: [MOBILE_ANIMS.attack],
+      Death: [MOBILE_ANIMS.death],
+    },
+    rifle: {
+      Attack: [MOBILE_ANIMS.attack],
+      Skill8: [MOBILE_ANIMS.attack],
+    },
+    pistol: {
+      Attack: [MOBILE_ANIMS.attack],
+      Skill8: [MOBILE_ANIMS.attack],
+    },
+  };
   const SHARED_ANIMS = {
     // ── Locomotion ────────────────────────────────────────────────────
     Idle: [mixamo(UNITY.locomotion + "idle.fbx")],
@@ -352,6 +410,50 @@
     Skill9: [mixamo(UNITY.magic + "Standing 2H Magic Area Attack 02.fbx")], // ult / spell vfx trigger
   };
 
+  function normalizeAnimationPack(packId) {
+    const p = (packId || "").toLowerCase();
+    if (!p) return "";
+    if (p === "sword_shield" || p === "1h-shield") return "sword_shield";
+    if (p === "2h-melee") return "spear_melee";
+    if (p === "longbow") return "longbow";
+    if (p === "magic") return "magic";
+    if (p === "rifle") return "rifle";
+    if (p === "pistol") return "pistol";
+    if (p === "unarmed") return "unarmed";
+    return "";
+  }
+
+  function activeWeaponFromBuild(build) {
+    const eq = build && build.equipped ? build.equipped : null;
+    if (!eq) return "";
+    const weaponSlots = [
+      "staff",
+      "bow",
+      "spear",
+      "sword",
+      "axe",
+      "hammer",
+      "pick",
+    ];
+    for (let i = 0; i < weaponSlots.length; i++) {
+      const slot = weaponSlots[i];
+      if (eq[slot]) return slot;
+    }
+    return "";
+  }
+
+  function resolveWeaponSkillProfile(character) {
+    const build = character && character.build ? character.build : null;
+    const byPack = normalizeAnimationPack(build && build.animationPack);
+    if (byPack) return byPack;
+    const slot = activeWeaponFromBuild(build);
+    if (slot === "staff") return "magic";
+    if (slot === "bow") return "longbow";
+    if (slot === "spear") return "spear_melee";
+    if (slot) return "sword_shield";
+    return "unarmed";
+  }
+
   // ── ANIMATION → SPELL VFX MAP ─────────────────────────────────────────
   // The Player class fires `grudge:vfx` CustomEvents alongside one-shot
   // animations so the world layer can spawn projectiles, ground rings,
@@ -419,6 +521,8 @@
   // specific overrides (e.g. idle.fbx). All sources are Mixamo-rigged and
   // will be retargeted to Bip001 at runtime.
   function animationSourcesFor(character) {
+    const weaponProfile = resolveWeaponSkillProfile(character);
+    const profileOverrides = WEAPON_SKILL_OVERRIDES[weaponProfile] || {};
     const sources = {};
     const allStates = ANIMATION_STATES.concat(
       ANIMATION_STATES_BIP001.filter(function (s) {
@@ -440,7 +544,8 @@
         url: ANIM_DIR + lower + ".fbx",
         rig: "bip001",
       };
-      sources[state] = [racePrefixed, raceGeneric].concat(shared);
+      const weaponMapped = profileOverrides[state] || [];
+      sources[state] = [racePrefixed, raceGeneric].concat(weaponMapped, shared);
     });
     return sources;
   }

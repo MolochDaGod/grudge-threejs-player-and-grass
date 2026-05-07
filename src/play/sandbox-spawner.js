@@ -123,7 +123,8 @@ export function createGrudgeSandbox(THREE, loaders, opts) {
     return _loadModel(url).then(async (gltf) => {
       const model = gltf.scene;
       const group = new THREE.Group();
-      group.scale.setScalar(charScale * playerScale);
+      // Use the character-defined scale directly, same as the main Player.
+      group.scale.setScalar(charScale);
       // Place near the player by default, with a small ring offset.
       const pp = getPlayerPos();
       const angle =
@@ -178,7 +179,7 @@ export function createGrudgeSandbox(THREE, loaders, opts) {
       };
       spawned.push(entry);
       return entry;
-    });
+    };);
   }
 
   function removeAll() {
