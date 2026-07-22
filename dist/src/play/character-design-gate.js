@@ -227,6 +227,28 @@
   margin-top: 12px; text-align: center;
   font-family: "JetBrains Mono", monospace; font-size: 10px; color: #6a5540;
 }
+#char-design-gate .cdg-account {
+  margin: 0 0 14px; padding: 10px 12px;
+  background: rgba(0,0,0,.4); border: 1px solid #3a2a1a; border-radius: 8px;
+  font-family: "JetBrains Mono", monospace; font-size: 11px; line-height: 1.5;
+  color: #9b7d52;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+}
+#char-design-gate .cdg-account b { color: #d4a400; }
+#char-design-gate .cdg-account .ok { color: #3dcf7a; }
+#char-design-gate .cdg-account .warn { color: #e8a040; }
+#char-design-gate .cdg-account a {
+  color: #4a9eff; text-decoration: none; border-bottom: 1px dashed #3a2a1a;
+}
+#char-design-gate .cdg-account button {
+  background: linear-gradient(180deg, #d4a400, #c9950a);
+  color: #0a0705; border: none; border-radius: 5px;
+  padding: 8px 12px; font-family: "Cinzel", serif; font-size: 11px;
+  font-weight: 700; letter-spacing: 1px; cursor: pointer;
+}
+#char-design-gate .cdg-account button.ghost {
+  background: transparent; color: #9b7d52; border: 1px solid #3a2a1a;
+}
 body.cdg-designing #hud,
 body.cdg-designing #main-panel,
 body.cdg-designing #info {
@@ -255,6 +277,9 @@ body.cdg-designing canvas {
             <h1>Design your pirate</h1>
             <p class="cdg-sub">Grudge Warlords · Open-world lobby on three-layer grass hills</p>
           </div>
+        </div>
+        <div class="cdg-account" id="cdg-account">
+          <span>Checking Railway account…</span>
         </div>
         <div class="cdg-grid">
           <div>
@@ -479,21 +504,134 @@ body.cdg-designing canvas {
     return root;
   }
 
-  function enterLobby() {
-    const build = buildStateFromUI();
+  function enterLobby(opts) {
+    opts = opts || {};
+    let build;
+    if (opts.railwayBuild) {
+      build = opts.railwayBuild;
+    } else {
+      build = buildStateFromUI();
+      build.source = build.source || "gate";
+      // Keep Railway characterId if already signed in so saves go to Postgres
+      try {
+        const meta = global.GrudgeBoot;
+        if (meta && meta.characterId) {
+          build.characterId = meta.characterId;
+          build.source = "gate";
+        }
+      } catch (_) { /* */ }
+    }
     writeBuild(build);
+    // Persist to Railway when we have characterId + JWT
+    try {
+      const id = build.characterId;
+      const sdk = global.GrudgeAccountSDK;
+      if (id && sdk && sdk.getToken && sdk.getToken() && sdk.saveBuild) {
+        void sdk.saveBuild(id, build);
+      }
+    } catch (_) { /* */ }
     const url = new URL(global.location.href);
     url.searchParams.set("char", build.raceId);
     url.searchParams.set("lobby", "1");
-    // Drop design-only params
+    if (build.characterId) {
+      url.searchParams.set("characterId", build.characterId);
+    }
     url.searchParams.delete("enter");
     global.location.href = url.pathname + "?" + url.searchParams.toString() + url.hash;
+  }
+
+  function loginUrl() {
+    try {
+      const idBase =
+        (global.import_meta_env && global.import_meta_env.VITE_GRUDGE_ID_URL) ||
+        "https://id.grudge-studio.com";
+      return idBase + "/?returnTo=" + encodeURIComponent(global.location.href);
+    } catch (_) {
+      return "https://id.grudge-studio.com/?returnTo=" + encodeURIComponent(global.location.href);
+    }
+  }
+
+  function paintAccountBanner() {
+    const el = document.getElementById("cdg-account");
+    if (!el) return;
+    const meta = global.GrudgeBoot;
+    const sdk = global.GrudgeAccountSDK;
+    if (!meta) {
+      el.innerHTML = "<span>Account: resolving…</span>";
+      return;
+    }
+    if (meta.source === "railway" && meta.characterId) {
+      el.innerHTML =
+        '<div><span class="ok">Railway</span> · <b>' +
+        escapeHtml(meta.characterName || "Hero") +
+        "</b> · " +
+        escapeHtml(meta.raceId) +
+        (meta.username ? " · @" + escapeHtml(meta.username) : "") +
+        "</div>";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "Play Railway hero →";
+      btn.addEventListener("click", () => {
+        const b = readBuild();
+        if (b && b.source === "railway") enterLobby({ railwayBuild: b });
+        else enterLobby();
+      });
+      el.appendChild(btn);
+      return;
+    }
+    if (meta.signedIn) {
+      el.innerHTML =
+        '<div><span class="warn">Signed in</span> · no Railway characters yet · design below or open Foundry</div>';
+      const wrap = document.createElement("div");
+      wrap.style.display = "flex";
+      wrap.style.gap = "6px";
+      const ghost = document.createElement("button");
+      ghost.type = "button";
+      ghost.className = "ghost";
+      ghost.textContent = "Refresh";
+      ghost.addEventListener("click", () => {
+        if (sdk && sdk.syncFromBackend) {
+          void sdk.syncFromBackend().then(() => {
+            if (global.GrudgeRailwayBoot) {
+              /* re-boot not available; page reload */
+              global.location.reload();
+            }
+          });
+        } else global.location.reload();
+      });
+      wrap.appendChild(ghost);
+      el.appendChild(wrap);
+      return;
+    }
+    el.innerHTML =
+      '<div><span class="warn">Guest</span> · session only (not Railway SSOT)</div>';
+    const a = document.createElement("a");
+    a.href = loginUrl();
+    a.textContent = "Sign in with Grudge ID →";
+    el.appendChild(a);
+  }
+
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   function showDesign() {
     document.body.classList.add("cdg-designing");
     render();
     setLobbyChrome(false);
+    paintAccountBanner();
+    // Railway boot may finish after first paint
+    global.addEventListener("grudge:railway-boot", paintAccountBanner);
+    if (global.GrudgeBoot) paintAccountBanner();
+    else if (global.GrudgeRailwayBoot) {
+      global.GrudgeRailwayBoot.then(paintAccountBanner).catch(function () {
+        paintAccountBanner();
+      });
+    }
   }
 
   function enterLobbyChromeOnly() {
@@ -518,35 +656,59 @@ body.cdg-designing canvas {
   }
 
   function boot() {
-    if (isLobbyMode()) {
-      // Ensure a minimal build exists so equip/texture path is defined
-      const p = qs();
-      const char = p.get("char");
-      let build = readBuild();
-      if (!build || (char && build.raceId !== char)) {
-        const raceId = char || "human";
-        const preset = presets().find((x) => x.id === "knight") || presets()[0];
-        build = {
-          schemaVersion: 1,
-          name: (build && build.name) || "Captain",
-          raceId,
-          classId: (build && build.classId) || "knight",
-          skinVariant: (build && build.skinVariant) || defaultSkin(raceId),
-          textureUrl: texturePath(raceId, (build && build.skinVariant) || defaultSkin(raceId)),
-          animationPack: (build && build.animationPack) || "sword_shield",
-          gearPresetId: (build && build.gearPresetId) || "knight",
-          equipped: (build && build.equipped && Object.keys(build.equipped).length)
-            ? build.equipped
-            : Object.assign({}, (preset && preset.loadout) || { body: "A", arms: "A", legs: "A", head: "A", sword: "A" }),
-          lobby: "pirate_open_world",
-          targetHeight: 1.8 * 4.2,
-          worldScale: 4.2,
-        };
-        writeBuild(build);
+    // Wait for Railway stamp when available so lobby uses Postgres hero first.
+    const afterBoot = () => {
+      if (isLobbyMode()) {
+        const p = qs();
+        const char = p.get("char");
+        let build = readBuild();
+        // Railway stamp from sdk-bootstrap is authoritative when present
+        if (global.GrudgeBuild && global.GrudgeBuild.source === "railway") {
+          build = global.GrudgeBuild;
+          writeBuild(build);
+        } else if (!build || (char && build.raceId !== char && build.source !== "railway")) {
+          const raceId = char || "human";
+          const preset = presets().find((x) => x.id === "knight") || presets()[0];
+          build = {
+            schemaVersion: 1,
+            name: (build && build.name) || "Captain",
+            raceId,
+            classId: (build && build.classId) || "knight",
+            skinVariant: (build && build.skinVariant) || defaultSkin(raceId),
+            textureUrl: texturePath(raceId, (build && build.skinVariant) || defaultSkin(raceId)),
+            animationPack: (build && build.animationPack) || "sword_shield",
+            gearPresetId: (build && build.gearPresetId) || "knight",
+            equipped: (build && build.equipped && Object.keys(build.equipped).length)
+              ? build.equipped
+              : Object.assign({}, (preset && preset.loadout) || { body: "A", arms: "A", legs: "A", head: "A", sword: "A" }),
+            lobby: "pirate_open_world",
+            targetHeight: 1.8 * 4.2,
+            worldScale: 4.2,
+            source: (build && build.source) || "session",
+          };
+          writeBuild(build);
+        }
+        enterLobbyChromeOnly();
+      } else {
+        showDesign();
       }
-      enterLobbyChromeOnly();
+    };
+
+    if (global.GrudgeRailwayBoot) {
+      Promise.resolve(global.GrudgeRailwayBoot).then(afterBoot).catch(afterBoot);
+    } else if (global.GrudgeBoot) {
+      afterBoot();
     } else {
-      showDesign();
+      // sdk-bootstrap may load slightly later
+      let n = 0;
+      const t = setInterval(() => {
+        if (global.GrudgeBoot || global.GrudgeRailwayBoot || ++n > 40) {
+          clearInterval(t);
+          if (global.GrudgeRailwayBoot) {
+            Promise.resolve(global.GrudgeRailwayBoot).then(afterBoot).catch(afterBoot);
+          } else afterBoot();
+        }
+      }, 50);
     }
   }
 

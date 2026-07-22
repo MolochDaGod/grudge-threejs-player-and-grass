@@ -788,24 +788,32 @@
 
     // ── Stage 1: equipment-manager + player-config ──
     // Loaded as classic scripts in <head>; already on window.
+    // ── Stage 1b: Railway-first boot (JWT → /api/characters → session stamp)
+    // MUST finish before script.js so resolveCharacter() sees Railway race/equip.
+    // sdk-bootstrap.ts kicks this as window.GrudgeRailwayBoot.
+    const railwayReady = (async () => {
+      try {
+        // Prefer already-running promise from sdk-bootstrap module
+        if (window.GrudgeRailwayBoot) {
+          return await window.GrudgeRailwayBoot;
+        }
+        const m = await import("./sdk-bootstrap.ts");
+        if (m.railwayBootPromise) return await m.railwayBootPromise;
+        if (window.GrudgeRailwayBoot) return await window.GrudgeRailwayBoot;
+      } catch (e) {
+        console.warn("[boot] Railway boot skipped:", e && e.message);
+      }
+      return null;
+    })();
+
     // ── Stage 2: script.js ──
-    // Loaded only AFTER the page's `load` event fires. If we attach it
-    // earlier, headless Chromium's `load` event waits for script.js to
-    // finish (including its 15-30s WebGL/grass init), which pushes
-    // page.goto past Playwright's default timeouts.
+    // Loaded only AFTER (1) page `load` and (2) Railway boot settles (or times out).
+    // Absolute URL: production is /play (vercel rewrite); relative ./script.js → /script.js 404.
     const scriptReady = new Promise((resolve, reject) => {
-      const kick = () => {
-        // setTimeout(0) yields to give the browser one tick to paint the
-        // initial DOM (race-tile shells from the head HTML still render
-        // immediately; tiles get filled in by buildMainPanel once Player
-        // fires grudge:player-ready).
-        //
-        // Use an ABSOLUTE URL: in production the page is served at /play
-        // (see vercel.json rewrite), and a relative "./script.js" would
-        // resolve to /script.js — which doesn't exist. Vite's grudgeCopy-
-        // ScriptJs plugin (vite.config.ts) copies src/play/script.js into
-        // dist/src/play/ so this absolute path resolves the same way in
-        // dev and prod.
+      const kick = async () => {
+        try {
+          await railwayReady;
+        } catch (_) { /* guest continues */ }
         setTimeout(() => loadScript("/src/play/script.js").then(resolve, reject), 0);
       };
       if (document.readyState === "complete") kick();

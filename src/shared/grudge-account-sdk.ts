@@ -53,6 +53,17 @@ export interface CharacterBuild {
   equipped: Partial<Record<EquipSlot, string | null>>;
   /** Mesh names the user explicitly hid (KayKit `_parts` etc.). */
   hiddenMeshes: string[];
+  /** Railway character UUID when build came from Postgres. */
+  characterId?: string;
+  /** Display name */
+  name?: string;
+  /** Where this build was stamped: railway | session | gate | space | guest */
+  source?: string;
+  textureUrl?: string;
+  gearPresetId?: string;
+  lobby?: string;
+  worldScale?: number;
+  targetHeight?: number;
 }
 
 export const DEFAULT_BUILD: CharacterBuild = {
@@ -60,9 +71,19 @@ export const DEFAULT_BUILD: CharacterBuild = {
   raceId: "human",
   classId: "warrior",
   skinVariant: "default",
-  animationPack: "1h-shield",
-  equipped: { body: "A", arms: "A", legs: "A", head: "A", shoulders: "A" },
+  animationPack: "sword_shield",
+  equipped: {
+    body: "A",
+    arms: "A",
+    legs: "A",
+    head: "A",
+    shoulders: "A",
+    sword: "A",
+  },
   hiddenMeshes: [],
+  source: "guest",
+  worldScale: 4.2,
+  targetHeight: 1.8 * 4.2,
 };
 
 // ── Character row shape returned by api.grudge-studio.com ──────────────────────

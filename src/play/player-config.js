@@ -207,16 +207,42 @@
 
   const DEFAULT_CHARACTER_ID = "human";
 
-  // Resolve active character from sessionStorage build or URL param.
+  // Resolve active character for Player load.
+  // Priority (Railway-first when sdk-bootstrap stamped session):
+  //   1. URL ?char= (explicit race)
+  //   2. window.GrudgeBuild (Railway / boot stamp — preferred over stale session)
+  //   3. sessionStorage grudge_active_build
+  //   4. default human
   // All races use the unified Bip001 skeleton; no model variants.
   function resolveCharacter() {
     let requested = null;
     let activeBuild = null;
+
+    // Railway / sdk-bootstrap stamps window.GrudgeBuild before script.js.
+    var winBuild = null;
+    var sessionBuild = null;
     try {
-      const raw = sessionStorage.getItem("grudge_active_build");
-      if (raw) activeBuild = JSON.parse(raw);
+      if (window.GrudgeBuild && window.GrudgeBuild.raceId) {
+        winBuild = window.GrudgeBuild;
+      }
     } catch (e) {
       /* no-op */
+    }
+    try {
+      const raw = sessionStorage.getItem("grudge_active_build");
+      if (raw) sessionBuild = JSON.parse(raw);
+    } catch (e) {
+      /* no-op */
+    }
+    // Prefer railway-stamped build over guest session.
+    if (winBuild && winBuild.source === "railway") {
+      activeBuild = winBuild;
+    } else if (sessionBuild && sessionBuild.source === "railway") {
+      activeBuild = sessionBuild;
+    } else if (winBuild) {
+      activeBuild = winBuild;
+    } else if (sessionBuild) {
+      activeBuild = sessionBuild;
     }
     try {
       const params = new URLSearchParams(window.location.search);
@@ -225,7 +251,7 @@
       /* no-op */
     }
 
-    // sessionStorage build (set by the creator's Play button) takes priority.
+    // Build race when no URL race (Railway character raceId).
     if (!requested && activeBuild && activeBuild.raceId) {
       requested = activeBuild.raceId;
     }
@@ -235,8 +261,7 @@
         return c.id === requested;
       });
       if (found) {
-        // Override skin texture from design-gate / creator build.
-        // Prefer explicit textureUrl, then skinVariant path, else race default.
+        // Override skin texture from design-gate / Railway / creator build.
         var texture = found.texture;
         if (activeBuild) {
           if (activeBuild.textureUrl) {
@@ -250,7 +275,6 @@
           texture: texture,
           build: activeBuild,
         });
-        // Perfect scale: design gate stamps worldScale / targetHeight.
         if (activeBuild && typeof activeBuild.worldScale === "number") {
           merged.scale = activeBuild.worldScale;
         }
