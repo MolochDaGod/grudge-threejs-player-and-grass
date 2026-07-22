@@ -515,6 +515,7 @@ export class GrudgeGltfSpace {
       lobby: "pirate_open_world",
       worldScale: 4.2,
       targetHeight: 1.8 * 4.2,
+      source: "space",
       spaceExport: this.exportVariantJSON(),
     };
     try {

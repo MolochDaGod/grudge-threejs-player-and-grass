@@ -22,6 +22,12 @@ import {
 } from "@shared/grudge-account-sdk";
 import { onEquipmentChange } from "@shared/equipment-bridge";
 import { WEAPON_SLOTS, animPackForWeapon } from "@shared/catalog";
+import {
+  applySpaceVariantToPlayer,
+  installSpaceVariantHook,
+} from "./space-variant-apply";
+// Side-effect listener for late player-ready
+installSpaceVariantHook();
 
 const STORAGE_KEY = "grudge_active_build";
 const BOOT_META_KEY = "grudge_boot_meta";
@@ -429,9 +435,10 @@ async function wirePlayerBridge(): Promise<void> {
   });
 
   const onReady = () => {
-    if (window.GrudgePlayer) {
-      applyBuildToPlayer(window.GrudgePlayer, activeBuild);
-    }
+    if (!window.GrudgePlayer) return;
+    applyBuildToPlayer(window.GrudgePlayer, activeBuild);
+    // Space body regions / tint / collider debug after equip settles
+    applySpaceVariantToPlayer(window.GrudgePlayer);
   };
   window.addEventListener("grudge:player-ready", onReady);
   if (window.GrudgePlayer) onReady();
