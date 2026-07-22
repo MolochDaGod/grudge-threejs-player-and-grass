@@ -7,8 +7,24 @@
 // EXISTING infrastructure — DO NOT change these unless the underlying service
 // moves. Documented in the repo .env.example and in the GrudgeBuilder docs at
 //   https://github.com/molochdagod/GrudgeBuilder/blob/main/docs/API.md
-export const GRUDGE_API_URL =
-  import.meta.env.VITE_GRUDGE_API_URL ?? "https://api.grudge-studio.com";
+// Prefer same-origin /api on Vercel (rewritten to api.grudge-studio.com) so
+// Railway JWT calls avoid CORS on *.vercel.app. Explicit env always wins.
+export const GRUDGE_API_URL: string = (() => {
+  if (import.meta.env.VITE_GRUDGE_API_URL) {
+    return import.meta.env.VITE_GRUDGE_API_URL as string;
+  }
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    if (
+      h.endsWith(".vercel.app") ||
+      h === "localhost" ||
+      h === "127.0.0.1"
+    ) {
+      return ""; // relative → /api/* rewrite (vercel.json / vite proxy)
+    }
+  }
+  return "https://api.grudge-studio.com";
+})();
 
 export const GRUDGE_ID_URL =
   import.meta.env.VITE_GRUDGE_ID_URL ?? "https://id.grudge-studio.com";

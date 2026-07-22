@@ -170,6 +170,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/assets-cdn/, ""),
       },
+      // Railway character/account API (dev same-origin like production rewrite)
+      "/api": {
+        target: "https://api.grudge-studio.com",
+        changeOrigin: true,
+      },
     },
   },
   build: {

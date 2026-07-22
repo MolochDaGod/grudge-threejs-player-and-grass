@@ -8,6 +8,10 @@
       "source": "/assets-cdn/:path*",
       "destination": "https://assets.grudge-studio.com/:path*"
     },
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.grudge-studio.com/api/:path*"
+    },
     { "source": "/", "destination": "/src/landing/index.html" },
     { "source": "/play", "destination": "/src/play/index.html" },
     { "source": "/space", "destination": "/src/space/index.html" },
