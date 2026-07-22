@@ -18618,10 +18618,19 @@ var Player = class {
     // Auto-fit keeps imported race models at a predictable in-world height.
     // This prevents accidental giant/tiny spawns when source units vary.
     if (character.autoFit !== false) {
+      // Prefer design-gate / build targetHeight, else SI human * world scale.
+      const buildH =
+        character.build &&
+        typeof character.build.targetHeight === "number" &&
+        character.build.targetHeight > 0
+          ? character.build.targetHeight
+          : null;
       const targetHeight =
         typeof character.targetHeight === "number" && character.targetHeight > 0
           ? character.targetHeight
-          : 1.8 * PLAYER_SCALE;
+          : buildH != null
+            ? buildH
+            : 1.8 * PLAYER_SCALE;
       const fitBox = new pt().setFromObject(model, true);
       const fitSize = fitBox.getSize(new w());
       if (fitSize.y > 1e-4) {
@@ -18684,10 +18693,35 @@ var Player = class {
           character.prefix || "",
         );
         this.equipment.catalog(model);
-        // Apply the equipped loadout from the creator sessionStorage build.
-        if (character.build && character.build.equipped) {
-          this.equipment.applyLoadout(character.build.equipped);
+        // Apply creator / design-gate loadout. Catalog hides every mesh —
+        // empty equipped would leave an invisible pirate, so fall back to a
+        // sane default (A-kit + sword) or LOADOUT_PRESETS.knight.
+        let loadout =
+          character.build && character.build.equipped
+            ? character.build.equipped
+            : null;
+        const hasKeys =
+          loadout &&
+          typeof loadout === "object" &&
+          Object.keys(loadout).length > 0;
+        if (!hasKeys) {
+          const cfg = window.GrudgePlayerConfig;
+          const preset =
+            (cfg &&
+              cfg.getLoadoutPreset &&
+              cfg.getLoadoutPreset(
+                (character.build && character.build.gearPresetId) || "knight",
+              )) ||
+            null;
+          loadout = (preset && preset.loadout) || {
+            body: "A",
+            arms: "A",
+            legs: "A",
+            head: "A",
+            sword: "A",
+          };
         }
+        this.equipment.applyLoadout(loadout);
       } catch (err) {
         console.warn("[Player] EquipmentManager.catalog failed:", err);
       }
@@ -19850,6 +19884,28 @@ renderer.toneMappingExposure = 1.1;
 document.body.appendChild(renderer.domElement);
 renderer.domElement.style.outline = "none";
 var world = new World(renderer);
+// Expose for design gate, grass bridge, sandbox, and fleet tools.
+if (typeof window !== "undefined") {
+  window.world = world;
+  window.GrudgeWorld = world;
+  window.PLAYER_SCALE = PLAYER_SCALE;
+  try {
+    // Pirate open-world lobby atmosphere when ?lobby=1 or ?char= present.
+    var _qs = new URLSearchParams(window.location.search || "");
+    var _lobby =
+      _qs.get("lobby") === "1" ||
+      _qs.get("enter") === "1" ||
+      !!_qs.get("char") ||
+      (document.body && document.body.classList.contains("cdg-lobby"));
+    if (_lobby && world.scene) {
+      world.scene.background = new V(0x87b5d4);
+      world.scene.fog = new Rr(0x9ec4d8, 80, 280);
+      world.scene.userData._pirateLobby = true;
+    }
+  } catch (_e) {
+    /* URL / scene optional */
+  }
+}
 var clock = new Zo();
 function animate() {
   requestAnimationFrame(animate);

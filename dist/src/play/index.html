@@ -668,6 +668,18 @@
       color: var(--muted);
       text-align: center;
     }
+
+    /* Design-gate: hide game chrome until lobby entry */
+    html.cdg-pending body #hud,
+    html.cdg-pending body #main-panel,
+    html.cdg-pending body #info,
+    body.cdg-designing #hud,
+    body.cdg-designing #main-panel,
+    body.cdg-designing #info {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
   </style>
 
   <!--
@@ -708,6 +720,22 @@
        The files themselves attach window.GrudgeEquipmentManager and
        window.GrudgePlayerConfig globals via IIFEs so type="module" is
        behaviour-compatible. -->
+  <!-- Hide HUD immediately if this is a bare /play design visit (before gate module). -->
+  <script>
+    (function () {
+      try {
+        var p = new URLSearchParams(location.search);
+        if (!p.get("char") && p.get("lobby") !== "1" && p.get("enter") !== "1") {
+          document.documentElement.classList.add("cdg-pending");
+          document.addEventListener("DOMContentLoaded", function () {
+            document.body.classList.add("cdg-designing");
+          });
+        }
+      } catch (e) { /* */ }
+    })();
+  </script>
+  <!-- /play entry: design character → Play → pirate open-world lobby. -->
+  <!-- Clean grass + three-layer terrain API (Three.js only, no Babylon). -->
   <!-- Bridges the bundled Player class to the api.grudge-studio.com
        character backend + the postMessage equipment bridge. -->
   <!--
@@ -731,8 +759,9 @@
         5. Populate the character <select> from GrudgePlayerConfig.CHARACTERS
            and wire up the equipment panel + hotbar feedback.
     -->
-  <script type="module" crossorigin src="/assets/play-C_vtbgKf.js"></script>
+  <script type="module" crossorigin src="/assets/play-CkdkUyLo.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/three.module-BnjPqKkK.js">
   <link rel="modulepreload" crossorigin href="/assets/catalog-BootiB2w.js">
   <link rel="stylesheet" crossorigin href="/assets/play-SaQ7YOQo.css">
 </head>
@@ -752,6 +781,9 @@
     </div>
     <a class="panel-link" href="/mainpanel" target="_blank" rel="noopener">
       Open Full Main Panel &rsaquo;
+    </a>
+    <a class="panel-link" href="/space" target="_blank" rel="noopener">
+      GLTF Space (assets · IK · variants) &rsaquo;
     </a>
   </div>
 

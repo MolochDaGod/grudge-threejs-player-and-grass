@@ -44,6 +44,16 @@ export function ViewerPage() {
     // e.g. "/character/races/textures/barbarian/default.png" → "default"
     const skinFileName = selectedTextureUrl.split("/").pop()?.replace(/\.png$/i, "") ?? "default";
 
+    // Default knight-style loadout so /play EquipmentManager does not leave
+    // every catalogued mesh hidden (empty equipped → invisible pirate).
+    const defaultEquipped: Record<string, string> = {
+      body: "A",
+      arms: "A",
+      legs: "A",
+      head: "A",
+      sword: "A",
+      shield: "A",
+    };
     const build = {
       schemaVersion: 1,
       raceId: selectedRace.playId,
@@ -52,14 +62,18 @@ export function ViewerPage() {
       skinTint: selectedSkinTint ?? null,
       textureUrl: selectedTextureUrl,
       animationPack: activeWeapon ?? "sword_shield",
-      gearPresetId: gearPresetId ?? null,
-      equipped: {},
+      gearPresetId: gearPresetId ?? "knight",
+      equipped: defaultEquipped,
       hiddenMeshes: [...hiddenMeshes],
+      lobby: "pirate_open_world",
+      worldScale: 4.2,
+      targetHeight: 1.8 * 4.2,
     };
     sessionStorage.setItem("grudge_active_build", JSON.stringify(build));
-    // Also pass ?char=<playId> so /play renders the right race even if a stale
-    // sessionStorage build is missing (e.g. opened in a new tab).
-    window.location.href = `/play?char=${encodeURIComponent(selectedRace.playId)}`;
+    // Also pass ?char=<playId>&lobby=1 so /play skips the design gate and
+    // enters the pirate open-world grass lobby directly.
+    window.location.href =
+      `/play?char=${encodeURIComponent(selectedRace.playId)}&lobby=1`;
   }
 
   return (
@@ -132,10 +146,17 @@ export function ViewerPage() {
           </span>
         )}
 
+        <a
+          href="/space"
+          className="ml-auto px-3 py-1.5 text-xs text-slate-300 border border-slate-600 rounded hover:border-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
+          title="Grudge GLTF Space — open assets, bone helpers, body regions, color variants"
+        >
+          GLTF Space
+        </a>
         {/* Play button */}
         <button
           onClick={handlePlayClick}
-          className="ml-auto px-4 py-1.5 bg-amber-500 text-black font-bold text-sm rounded hover:bg-amber-400 transition-colors flex-shrink-0"
+          className="px-4 py-1.5 bg-amber-500 text-black font-bold text-sm rounded hover:bg-amber-400 transition-colors flex-shrink-0"
         >
           Play →
         </button>

@@ -235,19 +235,29 @@
         return c.id === requested;
       });
       if (found) {
-        // Override skin texture with the one the user chose in the creator.
-        if (
-          activeBuild &&
-          activeBuild.skinVariant &&
-          activeBuild.skinVariant !== "default"
-        ) {
-          return Object.assign({}, found, {
-            texture:
-              TEXTURE_DIR + found.id + "/" + activeBuild.skinVariant + ".png",
-            build: activeBuild,
-          });
+        // Override skin texture from design-gate / creator build.
+        // Prefer explicit textureUrl, then skinVariant path, else race default.
+        var texture = found.texture;
+        if (activeBuild) {
+          if (activeBuild.textureUrl) {
+            texture = activeBuild.textureUrl;
+          } else if (activeBuild.skinVariant) {
+            texture =
+              TEXTURE_DIR + found.id + "/" + activeBuild.skinVariant + ".png";
+          }
         }
-        return Object.assign({}, found, { build: activeBuild });
+        var merged = Object.assign({}, found, {
+          texture: texture,
+          build: activeBuild,
+        });
+        // Perfect scale: design gate stamps worldScale / targetHeight.
+        if (activeBuild && typeof activeBuild.worldScale === "number") {
+          merged.scale = activeBuild.worldScale;
+        }
+        if (activeBuild && typeof activeBuild.targetHeight === "number") {
+          merged.targetHeight = activeBuild.targetHeight;
+        }
+        return merged;
       }
     }
     const fallback =

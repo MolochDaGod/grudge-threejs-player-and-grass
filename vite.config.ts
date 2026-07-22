@@ -4,6 +4,7 @@
 //
 //   /             → src/landing/index.html (character creator — React)
 //   /play         → src/play/index.html    (grass scene + HUD)
+//   /space        → src/space/index.html   (Grudge GLTF Space asset studio)
 //   /mainpanel    → src/mainpanel/index.html (character / inventory / equip)
 //
 // All three pages share `src/shared/` (GrudgeAccountSDK, equipment bridge, R2
@@ -40,6 +41,9 @@ function grudgeCopyScriptJs(): Plugin {
   const root = resolve(__dirname);
   const sources = [
     "src/play/script.js",
+    // Character design gate is an IIFE loaded as type=module but also needs a
+    // stable path if any runtime loadScript re-fetches it. Harmless to mirror.
+    "src/play/character-design-gate.js",
     // sandbox-spawner is also dynamically imported via boot's `import('./sandbox-spawner.js')`
     // and Vite catches that one through the import graph, so we don't need
     // to copy it. Same for player-config / equipment-manager / sdk-bootstrap
@@ -145,6 +149,7 @@ export default defineConfig({
       "@": resolve(__dirname, "src/landing"),
       "@shared": resolve(__dirname, "src/shared"),
       "@play": resolve(__dirname, "src/play"),
+      "@space": resolve(__dirname, "src/space"),
       "@landing": resolve(__dirname, "src/landing"),
       "@mainpanel": resolve(__dirname, "src/mainpanel"),
       "@hud": resolve(__dirname, "src/hud"),
@@ -175,6 +180,7 @@ export default defineConfig({
       input: {
         landing: resolve(__dirname, "src/landing/index.html"),
         play: resolve(__dirname, "src/play/index.html"),
+        space: resolve(__dirname, "src/space/index.html"),
         mainpanel: resolve(__dirname, "src/mainpanel/index.html"),
       },
     },

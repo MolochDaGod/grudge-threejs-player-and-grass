@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grudge GLTF Space · Asset Studio</title>
+  <meta name="theme-color" content="#070b14" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div class="brand">GLTF Space <span>Grudge · SI units</span></div>
+      <div class="sep"></div>
+      <a class="nav" href="/">Creator</a>
+      <a class="nav" href="/play">Play</a>
+      <a class="nav" href="/mainpanel">Main Panel</a>
+      <div class="spacer"></div>
+      <label class="btn" id="btn-open" for="file-input">Open GLB / FBX…</label>
+      <input id="file-input" type="file" accept=".glb,.gltf,.fbx,model/gltf-binary,model/gltf+json" multiple />
+      <button type="button" id="btn-fit">Fit 1.8 m</button>
+      <button type="button" id="btn-export">Export JSON</button>
+      <button type="button" class="primary" id="btn-play">Send → Play</button>
+    </header>
+
+    <div id="workspace">
+      <aside id="left">
+        <div class="section-title">Assets</div>
+        <div id="asset-list"></div>
+
+        <div class="section-title">grudge6 races</div>
+        <div class="race-grid" id="race-grid"></div>
+
+        <div class="section-title">Animations</div>
+        <div class="clip-list" id="clip-list"></div>
+
+        <div class="section-title">Display</div>
+        <label class="toggle"><input type="checkbox" id="toggle-bones" checked /> Bone helpers (root / hands / feet / weapon)</label>
+        <label class="toggle"><input type="checkbox" id="toggle-colliders" checked /> Colliders (body + weapon)</label>
+        <label class="toggle"><input type="checkbox" id="toggle-grid" checked /> 1 m grid</label>
+        <label class="toggle"><input type="checkbox" id="toggle-human" checked /> 1.8 m human yardstick</label>
+
+        <div class="actions">
+          <button type="button" class="danger" id="btn-remove">Remove asset</button>
+        </div>
+
+        <div class="notice">
+          <b style="color:var(--gold-dim)">About open source</b><br />
+          <a href="https://gltfspace.com/" target="_blank" rel="noopener">gltfspace.com</a>
+          is a free HyperLoot tool but <b>not</b> published as open-source source code.
+          This page is a Grudge-native Three.js workspace with the same job
+          (open / inspect / animate assets) plus grudge6 helpers.
+        </div>
+      </aside>
+
+      <main id="viewport">
+        <div id="drop-hint">
+          Drop GLB / GLTF / FBX here<br />
+          or load a grudge6 race from the left strip
+        </div>
+      </main>
+
+      <aside id="right">
+        <div class="section-title">Body regions (SI scale)</div>
+        <div id="regions"></div>
+        <p style="color:var(--muted);font-size:10px;margin:4px 0 0">
+          1.00 = fitted bind · 0.75–1.35 bulk · metres-relative bone scale
+        </p>
+
+        <div class="section-title">Color variants</div>
+        <div class="variant-list" id="variant-list"></div>
+        <div class="actions">
+          <button type="button" id="btn-reset-color">Reset color</button>
+        </div>
+
+        <div class="section-title">Active meta</div>
+        <div class="meta" id="meta">No asset selected.</div>
+
+        <div class="section-title">Bone roles</div>
+        <div class="bone-list" id="bone-list"></div>
+
+        <div class="section-title">Status</div>
+        <div id="status" style="color:var(--muted);font-size:11px;min-height:32px">Ready.</div>
+      </aside>
+    </div>
+  </div>
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

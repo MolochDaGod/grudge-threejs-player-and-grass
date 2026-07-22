@@ -179,7 +179,7 @@ export function createGrudgeSandbox(THREE, loaders, opts) {
       };
       spawned.push(entry);
       return entry;
-    };);
+    });
   }
 
   function removeAll() {

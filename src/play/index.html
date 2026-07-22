@@ -669,6 +669,18 @@
       color: var(--muted);
       text-align: center;
     }
+
+    /* Design-gate: hide game chrome until lobby entry */
+    html.cdg-pending body #hud,
+    html.cdg-pending body #main-panel,
+    html.cdg-pending body #info,
+    body.cdg-designing #hud,
+    body.cdg-designing #main-panel,
+    body.cdg-designing #info {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
   </style>
 
   <!--
@@ -710,6 +722,24 @@
        behaviour-compatible. -->
   <script type="module" src="./equipment-manager.js"></script>
   <script type="module" src="./player-config.js"></script>
+  <!-- Hide HUD immediately if this is a bare /play design visit (before gate module). -->
+  <script>
+    (function () {
+      try {
+        var p = new URLSearchParams(location.search);
+        if (!p.get("char") && p.get("lobby") !== "1" && p.get("enter") !== "1") {
+          document.documentElement.classList.add("cdg-pending");
+          document.addEventListener("DOMContentLoaded", function () {
+            document.body.classList.add("cdg-designing");
+          });
+        }
+      } catch (e) { /* */ }
+    })();
+  </script>
+  <!-- /play entry: design character → Play → pirate open-world lobby. -->
+  <script type="module" src="./character-design-gate.js"></script>
+  <!-- Clean grass + three-layer terrain API (Three.js only, no Babylon). -->
+  <script type="module" src="./play-bridge.mjs"></script>
   <!-- Bridges the bundled Player class to the api.grudge-studio.com
        character backend + the postMessage equipment bridge. -->
   <script type="module" src="./sdk-bootstrap.ts"></script>
@@ -1275,6 +1305,9 @@
     </div>
     <a class="panel-link" href="/mainpanel" target="_blank" rel="noopener">
       Open Full Main Panel &rsaquo;
+    </a>
+    <a class="panel-link" href="/space" target="_blank" rel="noopener">
+      GLTF Space (assets · IK · variants) &rsaquo;
     </a>
   </div>
 

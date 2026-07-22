@@ -10,6 +10,7 @@
     },
     { "source": "/", "destination": "/src/landing/index.html" },
     { "source": "/play", "destination": "/src/play/index.html" },
+    { "source": "/space", "destination": "/src/space/index.html" },
     { "source": "/mainpanel", "destination": "/src/mainpanel/index.html" },
     { "source": "/favicon.ico", "destination": "/favicon.svg" }
   ],
