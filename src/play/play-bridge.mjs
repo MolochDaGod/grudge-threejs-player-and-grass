@@ -26,10 +26,10 @@ const API = {
   createTerrainChunk,
   applyPirateLobbyAtmosphere,
   GRASS_DEFAULTS,
-  /** World scale SSOT used by Player (script.js PLAYER_SCALE). */
-  PLAYER_SCALE: 4.2,
-  /** Auto-fit height = 1.8 m * PLAYER_SCALE. */
-  TARGET_HEIGHT: 1.8 * 4.2,
+  /** SI world: 1 unit = 1 m (script.js PLAYER_SCALE). */
+  PLAYER_SCALE: 1,
+  /** Auto-fit human height (metres). */
+  TARGET_HEIGHT: 1.8,
   layers: {
     L0: "height_field",
     L1: "surface",

@@ -82,8 +82,8 @@ export const DEFAULT_BUILD: CharacterBuild = {
   },
   hiddenMeshes: [],
   source: "guest",
-  worldScale: 4.2,
-  targetHeight: 1.8 * 4.2,
+  worldScale: 1,
+  targetHeight: 1.8,
 };
 
 // ── Character row shape returned by api.grudge-studio.com ──────────────────────

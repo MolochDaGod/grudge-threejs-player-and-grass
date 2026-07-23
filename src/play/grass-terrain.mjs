@@ -200,7 +200,7 @@ export function createGrassMaterial(THREE_NS = THREE) {
     fragmentShader,
     uniforms: {
       time: { value: 0 },
-      bladeHeight: { value: 1.42 },
+      bladeHeight: { value: 1 },
       map: { value: null },
       alphaMap: { value: null },
       tipColor: { value: new THREE_NS.Color(0.45, 0.75, 0.22) },
@@ -328,8 +328,9 @@ export function createGrassTerrain(
 }
 
 export const GRASS_DEFAULTS = {
-  bladeWidth: 0.09,
-  bladeHeight: 1.42,
+  bladeWidth: 0.08,
+  /** SI: ~1 m tall grass relative to 1.8 m human. */
+  bladeHeight: 1,
   instancesHigh: 40000,
   instancesLow: 5000,
   chunkSize: 120,

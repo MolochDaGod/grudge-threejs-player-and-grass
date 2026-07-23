@@ -1,6 +1,6 @@
 /**
  * grudge6 race kit paths + visual variant palettes.
- * SI: human yardstick 1.8 m; local /play world may use PLAYER_SCALE 4.2.
+ * SI: human yardstick 1.8 m; /play world PLAYER_SCALE = 1 (1 unit = 1 m).
  */
 
 export const HUMAN_HEIGHT_M = 1.8;

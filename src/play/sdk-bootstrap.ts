@@ -225,8 +225,8 @@ export function characterToBuild(
     characterId: character.id,
     source: "railway",
     lobby: "pirate_open_world",
-    worldScale: 4.2,
-    targetHeight: 1.8 * 4.2,
+    worldScale: 1,
+    targetHeight: 1.8,
   };
 }
 
@@ -348,8 +348,11 @@ export async function railwayFirstBoot(opts?: {
         sessionBuild.equipped as Record<string, string | null>,
       ),
       source: (sessionBuild.source as string) || "session",
-      worldScale: sessionBuild.worldScale ?? 4.2,
-      targetHeight: sessionBuild.targetHeight ?? 1.8 * 4.2,
+      worldScale: sessionBuild.worldScale ?? 1,
+      targetHeight:
+        sessionBuild.targetHeight && sessionBuild.targetHeight <= 2.5
+          ? sessionBuild.targetHeight
+          : 1.8,
     };
     if (urlCharRace) {
       activeBuild.raceId = normalizeRaceId(urlCharRace);
@@ -386,8 +389,8 @@ export async function railwayFirstBoot(opts?: {
     equipped: ensureEquipped(DEFAULT_BUILD.equipped),
     raceId: urlCharRace ? normalizeRaceId(urlCharRace) : "human",
     source: "guest",
-    worldScale: 4.2,
-    targetHeight: 1.8 * 4.2,
+    worldScale: 1,
+    targetHeight: 1.8,
     textureUrl: textureFor(
       urlCharRace ? normalizeRaceId(urlCharRace) : "human",
       "default",

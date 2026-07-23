@@ -7,8 +7,8 @@
  *   - optional material tint from colorVariantId (via GrudgeBuild)
  *   - debug collider helpers when ?spaceDebug=1
  *
- * SI note: Space authors in metres (1.8 m human). Play world uses PLAYER_SCALE=4.2.
- * Region scales are unitless factors — apply as-is. Collider metres × PLAYER_SCALE.
+ * SI: Space + Play both use 1 unit = 1 m, human 1.8 m. Region scales unitless.
+ * Collider debug uses PLAYER_SCALE (1 in SI world).
  */
 import * as THREE from "three";
 
@@ -16,7 +16,7 @@ const VARIANT_KEY = "grudge_space_variant";
 const PLAYER_SCALE =
   (typeof window !== "undefined" &&
     (window as unknown as { PLAYER_SCALE?: number }).PLAYER_SCALE) ||
-  4.2;
+  1;
 
 export interface SpaceVariantRegions {
   overall?: { scale: number };

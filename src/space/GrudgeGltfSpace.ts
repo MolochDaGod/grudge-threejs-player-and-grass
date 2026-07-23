@@ -513,8 +513,8 @@ export class GrudgeGltfSpace {
       bodyRegions: a.regions,
       colliders: a.colliderDefs,
       lobby: "pirate_open_world",
-      worldScale: 4.2,
-      targetHeight: 1.8 * 4.2,
+      worldScale: 1,
+      targetHeight: 1.8,
       source: "space",
       spaceExport: this.exportVariantJSON(),
     };

@@ -77,22 +77,21 @@
   // TEXTURE_DIR kept as a local fallback for offline dev.
   const TEXTURE_DIR = "/character/races/textures/";
 
-  // ── 6 PLAYABLE RACES ───────────────────────────────────────────────────
-  // All races use Toon_RTS Bip001 skeleton, unified Mixamo animation pack,
-  // and consistent scale of 4.2. Each race is defined by:
-  //   - id: unique race identifier
-  //   - file: local Bip001 GLB (Toon_RTS race model)
-  //   - prefix: equipment slot naming prefix (WK_, BRB_, ELF_, DWF_, ORC_, UD_)
-  //   - scale: visual render scale (unified at 4.2 across all races)
-  //   - rigType: "bip001" (no retargeting needed; already Bip001-rigged)
+  // ── 6 PLAYABLE RACES (Toon_RTS / grudge6) ──────────────────────────────
+  // All races: Bip001 skeleton, Mixamo anim packs retargeted at runtime.
+  // SI world: scale starts at 1; Player autoFit → 1.8 m human height.
+  //   - file: local Bip001 GLB (Toon_RTS race kit under /character/races/)
+  //   - prefix: equipment mesh prefix (WK_, BRB_, ELF_, DWF_, ORC_, UD_)
+  //   - rigType: "bip001"
   const CHARACTERS = [
     {
       id: "human",
       label: "Human (WK)",
       file: "WK_Characters.glb",
       prefix: "WK_",
-      scale: 4.2,
+      scale: 1,
       yOffset: 0.0,
+      targetHeight: 1.8,
       rigType: "bip001",
       texture: TEXTURE_DIR + "human/default.png",
       meta: {
@@ -110,7 +109,8 @@
       label: "Barbarian (BRB)",
       file: "BRB_Characters.glb",
       prefix: "BRB_",
-      scale: 4.2,
+      scale: 1,
+      targetHeight: 1.8,
       yOffset: 0.0,
       rigType: "bip001",
       texture: TEXTURE_DIR + "barbarian/default.png",
@@ -129,7 +129,8 @@
       label: "Elf (ELF)",
       file: "ELF_Characters.glb",
       prefix: "ELF_",
-      scale: 4.2,
+      scale: 1,
+      targetHeight: 1.8,
       yOffset: 0.0,
       rigType: "bip001",
       texture: TEXTURE_DIR + "elf/highelves.png",
@@ -148,7 +149,8 @@
       label: "Dwarf (DWF)",
       file: "DWF_Characters.glb",
       prefix: "DWF_",
-      scale: 4.2,
+      scale: 1,
+      targetHeight: 1.8,
       yOffset: 0.0,
       rigType: "bip001",
       texture: TEXTURE_DIR + "dwarf/default.png",
@@ -167,7 +169,8 @@
       label: "Orc (ORC)",
       file: "ORC_Characters.glb",
       prefix: "ORC_",
-      scale: 4.2,
+      scale: 1,
+      targetHeight: 1.8,
       yOffset: 0.0,
       rigType: "bip001",
       texture: TEXTURE_DIR + "orc/default.png",
@@ -186,7 +189,8 @@
       label: "Undead (UD)",
       file: "UD_Characters.glb",
       prefix: "UD_",
-      scale: 4.2,
+      scale: 1,
+      targetHeight: 1.8,
       yOffset: 0.0,
       rigType: "bip001",
       texture: TEXTURE_DIR + "undead/default.png",

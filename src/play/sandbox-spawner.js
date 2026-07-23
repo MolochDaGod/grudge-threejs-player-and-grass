@@ -24,7 +24,7 @@ export function createGrudgeSandbox(THREE, loaders, opts) {
   const getTerrainY = opts.getTerrainY || (() => 0);
   const getPlayerPos = opts.getPlayerPos || (() => new THREE.Vector3());
   const playerScale =
-    typeof opts.playerScale === "number" ? opts.playerScale : 4.2;
+    typeof opts.playerScale === "number" ? opts.playerScale : 1;
 
   function _newGltfLoader() {
     const l = new GLTFLoaderCtor();

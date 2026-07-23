@@ -308,7 +308,7 @@ body.cdg-designing canvas {
           <button type="button" class="cdg-play" id="cdg-play">Play → Enter Lobby</button>
           <button type="button" class="cdg-skip" id="cdg-skip" title="Skip with default Human knight">Skip</button>
         </div>
-        <p class="cdg-hint">Mesh · texture · scale locked to grudge6 SI (1.8 × world scale 4.2) · grass L0/L1/L2 hills</p>
+        <p class="cdg-hint">Mesh · texture · scale: grudge6 Toon RTS @ 1.8 m SI · grass ~1 m · L0/L1/L2 hills</p>
       </div>
     `;
     document.body.appendChild(root);
@@ -363,8 +363,8 @@ body.cdg-designing canvas {
       gearPresetId: (preset && preset.id) || "knight",
       equipped,
       lobby: "pirate_open_world",
-      targetHeight: 1.8 * 4.2,
-      worldScale: 4.2,
+      targetHeight: 1.8,
+      worldScale: 1,
     };
   }
 
@@ -383,7 +383,7 @@ body.cdg-designing canvas {
     el.innerHTML =
       "<b>" + b.name + "</b> · " + (race ? race.label : b.raceId) +
       "<br>Skin <b>" + b.skinVariant + "</b> · Pack <b>" + b.animationPack + "</b>" +
-      "<br>Loadout <b>" + b.gearPresetId + "</b> · Scale <b>4.2</b> (fit 1.8×)" +
+      "<br>Loadout <b>" + b.gearPresetId + "</b> · Height <b>1.8 m</b> SI" +
       "<br>Lobby: <b>Pirate open world</b> · 3-layer grass hills";
   }
 
@@ -682,8 +682,8 @@ body.cdg-designing canvas {
               ? build.equipped
               : Object.assign({}, (preset && preset.loadout) || { body: "A", arms: "A", legs: "A", head: "A", sword: "A" }),
             lobby: "pirate_open_world",
-            targetHeight: 1.8 * 4.2,
-            worldScale: 4.2,
+            targetHeight: 1.8,
+            worldScale: 1,
             source: (build && build.source) || "session",
           };
           writeBuild(build);

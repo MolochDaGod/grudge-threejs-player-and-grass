@@ -924,7 +924,7 @@
           getPlayerPos: () => (window.world && window.world.player)
             ? window.world.player.group.position
             : new THREE.Vector3(),
-          playerScale: 4.2,
+          playerScale: 1,
         });
         window.GrudgePlayerConfig && (window.GrudgePlayerConfig._sandboxLoaded = true);
         window.GrudgeSandbox = sandbox;
@@ -1135,7 +1135,7 @@
           for (let i = 0; i < races.length; i++) {
             await window.GrudgeSandbox.spawnCharacter(races[i], {
               angle: (i / races.length) * Math.PI * 2,
-              radius: 6 * 4.2,
+              radius: 6,
               preset: _selectedPreset,
               useStore: useStore,
             }).catch((e) => console.warn("[sandbox] ring spawn failed:", e));

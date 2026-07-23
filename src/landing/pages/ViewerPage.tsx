@@ -66,8 +66,8 @@ export function ViewerPage() {
       equipped: defaultEquipped,
       hiddenMeshes: [...hiddenMeshes],
       lobby: "pirate_open_world",
-      worldScale: 4.2,
-      targetHeight: 1.8 * 4.2,
+      worldScale: 1,
+      targetHeight: 1.8,
     };
     sessionStorage.setItem("grudge_active_build", JSON.stringify(build));
     // Also pass ?char=<playId>&lobby=1 so /play skips the design gate and
