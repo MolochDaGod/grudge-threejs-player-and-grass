@@ -245,11 +245,16 @@ Prefixes: **WK_ · BRB_ · ELF_ · DWF_ · ORC_ · UD_**
 
 | Concern | Spec |
 |---------|------|
-| Body collider | Capsule ~0.28–0.35 r × ~1.0–1.1 height (m) |
-| Weapon blade | Box or capsule on hand bone (FleetWeaponSkill.collider) |
-| Feet IK / ground | Box3 min.y → terrain `sampleHeight(x,z)` |
-| Hand IK / attach | Containers above — do not invent new hand bones |
-| Surface state | `resolveSurfaceLocomotion` from grudge-physics |
+| Body collider | `PLAYER_CAPSULE` r=**0.35**, halfH=**0.55** (~1.8 m total); centre = feet + r+halfH |
+| Weapon blade | Box/capsule/sphere on **R_hand_container** during skill frames (`FleetWeaponSkill.collider`) |
+| Hurtboxes | Bone spheres from rest-pose part `Box3` (epicfight `buildHurtboxes` + Bip001 rematch) |
+| Feet ground | Box3 `min.y` → `playerGroup.y = sampleHeight(x,z)` (same SSOT as grass/harvest) |
+| Feet IK full | Optional dual-foot plant; **not** required to ship — do not block on CCD |
+| Hand attach | `R_hand_container` / `L_shield_container` — rigid props follow anim; no invent bones |
+| Surface state | `resolveSurfaceLocomotion`: ground\|wade\|swim\|climb\|wallRun\|mount\|boat\|fly |
+| Debug nodes | `Box3Helper` · `SkeletonHelper` · `createBoneHelperGroup` (AxesHelper + markers) |
+
+**Deep refs:** `references/box3-node-setup.md` · `references/ik-colliders-physics.md`
 
 ---
 
@@ -317,4 +322,19 @@ Prefixes: **WK_ · BRB_ · ELF_ · DWF_ · ORC_ · UD_**
 
 ## Sibling index
 
-See `references/skill-matrix.md` for file-level pointers and package paths.
+| Doc | Contents |
+|-----|----------|
+| `references/skill-matrix.md` | Skill → package / path map |
+| `references/box3-node-setup.md` | Box3 bodyBox, hierarchy, bone names, THREE helpers |
+| `references/ik-colliders-physics.md` | Capsule, SurfaceLocomotion, equip attach, weapon colliders, VFX |
+
+**Code SSOT anchors**
+
+| Area | Path |
+|------|------|
+| bodyBox / fit 1.8 m | `gameopen/artifacts/animator/src/three/fitCharacterHeight.ts` |
+| deploy + ground + facePlusZ | `…/characterDeploy.ts` |
+| Capsule + SurfaceLocomotion | `gameopen/lib/grudge-physics` |
+| Fleet weapon skills | `gameopen/lib/epicfight/src/combat/fleet/*` |
+| Bone helpers (/space) | `player-and-grass/src/space/helpers/boneHelpers.ts` |
+| Equip manager | `player-and-grass/src/play/equipment-manager.js` |

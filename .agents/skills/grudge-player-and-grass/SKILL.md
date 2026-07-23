@@ -5,11 +5,11 @@ description: >
   → pirate open-world grass lobby, three-layer terrain (L0–L3), grudge6 scale/texture/equip,
   and /space Grudge GLTF Space (open GLB/FBX, bone IK helpers, colliders, body regions,
   color variants). USE WHEN: threejs-player-and-grass, player-and-grass, /play route,
-  /space GLTF Space, grass hills, pirate lobby, character design gate, PLAYER_SCALE 4.2,
+  /space GLTF Space, grass hills, pirate lobby, character design gate, PLAYER_SCALE 1 SI,
   grass-terrain.mjs, terrain-layers, grudge_active_build, Send to Play, instanced grass,
-  blade trails. Load AFTER grudge-studio; ALWAYS pair with grudge-character-correctness
-  + grudge6-modular-characters for hero mesh; grudge-world-scale for SI; threejs-skills
-  for rendering. Never Babylon.
+  blade trails. Load AFTER grudge-studio + grudge6-full-stack; ALWAYS pair with
+  grudge-character-correctness + grudge6-modular-characters for hero mesh; grudge-world-scale
+  for SI 1.8 m; threejs-skills for rendering. Never Babylon.
 ---
 
 # grudge-player-and-grass
@@ -28,12 +28,12 @@ This skill is the **product SSOT** for that app. Docs in-repo:
 
 | User / task | Load |
 |-------------|------|
-| Edit `/play`, lobby, design gate | **this** + character-correctness + modular-characters |
+| Edit `/play`, lobby, design gate | **this** + **grudge6-full-stack** + correctness + modular |
 | Grass hills / terrain chunks / trails | **this** + threejs-shaders + three-instanced-lod |
-| `/space` asset studio / IK / colliders / body bulk | **this** + world-scale + modular-characters |
+| `/space` asset studio / IK / colliders / body bulk | **this** + **grudge6-full-stack** (Box3/nodes) + world-scale + modular |
 | Deploy / Vercel / rewrites | **this** + grudge-stack / fleet |
-| Race kit equip wrong / invisible pirate | modular-characters + character-correctness + **this** (equip defaults) |
-| 100× scale / wrong height in play vs space | world-scale + character-correctness + **this** (dual-scale rule) |
+| Race kit equip wrong / invisible pirate | full-stack + modular + correctness + **this** (equip defaults) |
+| 100× scale / wrong height | world-scale + correctness + full-stack Box3 + **this** (SI 1.8 m) |
 
 ---
 
@@ -61,21 +61,21 @@ Landing Play or ?char= present
   → treated as lobby entry (no design gate)
 
 Lobby boot
-  → World (script.js) + PLAYER_SCALE 4.2
-  → autoFit 1.8 * 4.2
+  → World (script.js) + PLAYER_SCALE **1** (SI)
+  → autoFit / targetHeight **1.8 m**
   → equip loadout (never leave catalog all-hidden)
   → texture from build.textureUrl / skinVariant
   → pirate atmosphere (fog/sky)
-  → grass chunks (bundled) + window.GrudgeGrass modules
+  → grass chunks (bundled) + window.GrudgeGrass modules (~1 m blades)
 ```
 
 ### /space flow
 
 ```
 Open GLB/FBX or race button
-  → fit 1.8 m SI (not 4.2 world)
-  → bone helpers (root/hands/feet/weapon)
-  → colliders (capsule/box metres)
+  → fit 1.8 m SI (same as /play)
+  → bone helpers (root/hands/feet/weapon) — createBoneHelperGroup
+  → Box3 body measure + colliders (capsule/box metres)
   → body regions 0.75–1.35
   → color variants
   → Export JSON and/or Send → Play (stamps build + grudge_space_variant)
@@ -85,14 +85,16 @@ Open GLB/FBX or race button
 
 ---
 
-## Dual scale (do not confuse)
+## SI world scale (unified)
 
 | Surface | Unit system | Character height |
 |---------|-------------|------------------|
-| `/space` | **SI: 1 unit = 1 m** | Fit **1.8 m** |
-| `/play` lobby | **World units** `PLAYER_SCALE = 4.2` | Fit **1.8 × 4.2** |
-| Export handoff | Space JSON is metres; Play multiplies for world | `targetHeight: 1.8 * 4.2` in build |
+| `/space` | **SI: 1 unit = 1 m** | Fit **1.8 m** (Box3 bodyBox) |
+| `/play` lobby | **SI: 1 unit = 1 m** | `PLAYER_SCALE = 1`, fit **1.8 m** |
+| Export handoff | Space JSON metres = Play metres | `targetHeight: 1.8` |
+| Grass | SI | Blade height ~**1 m** |
 
+Legacy **4.2** world scale is **retired** — do not reintroduce.  
 Never fit weapons/props to human height (`grudge-world-scale` / character-correctness kill list).
 
 ---
@@ -124,7 +126,7 @@ Production grass still runs inside bundled `src/play/script.js`; clean modules a
 |------|-----------------|
 | Resolve | `GrudgePlayerConfig.resolveCharacter()` + `grudge_active_build` |
 | Load | Race GLB `/character/races/{PREFIX}_Characters.glb` |
-| Scale | `PLAYER_SCALE` 4.2 + autoFit to `targetHeight` |
+| Scale | `PLAYER_SCALE` **1** + autoFit / Box3 to `targetHeight` **1.8 m** |
 | Texture | `textureUrl` or skins path; `flipY=false`, sRGB |
 | Equip | EquipmentManager catalog → **applyLoadout** (default knight A-kit if empty) |
 | Ground | Feet to terrainY from **same** height field |
@@ -186,9 +188,10 @@ Export JSON shape: `unit: metre`, bones world positions, colliders, regions → 
 | Skill | Why |
 |-------|-----|
 | **`grudge-studio`** | Umbrella first |
+| **`grudge6-full-stack`** | MASTER: Box3, nodes, equip, anim, physics, IK, VFX load map |
 | **`grudge6-modular-characters`** | Kit equip, prefixes, mesh_ids, containers |
 | **`grudge-character-correctness`** | Ground, face, atlas, no hip-float, anim pack truth |
-| **`grudge-world-scale`** | 1.8 m yardstick; dual-scale awareness |
+| **`grudge-world-scale`** | 1.8 m yardstick; SI metres |
 | **`threejs-skills`** | Then loaders / materials / shaders as needed |
 
 ### Load when task touches that domain
@@ -228,8 +231,8 @@ These are **not fully wired in code yet** — agents should use the listed skill
 
 | Gap | Use skill | Action |
 |-----|-----------|--------|
-| Play world still **4.2** vs SI **1.0** | world-scale + production-world | Long-term migrate lobby to 1 unit=1 m **or** document conversion at every handoff |
-| Space body regions / colliders **not applied in play** at runtime | this + combat-runtime | On player ready, read `grudge_space_variant` and apply region scales + collider debug |
+| ~~Play 4.2 vs SI~~ | — | **Done:** PLAYER_SCALE=1, targetHeight=1.8, grass ~1 m |
+| Space body regions / colliders **not applied in play** at runtime | this + full-stack + combat-runtime | On player ready, read `grudge_space_variant` and apply region scales + collider debug |
 | Color variants in Space = material tint only | modular-characters + materials | Prefer real atlas variants / skin PNGs for production; tint is preview |
 | Equip not full mesh_ids / D1 presets | modular-characters + d1-r2 | Wire gear_presets from ObjectStore when online |
 | Anim packs Mixamo retarget quality | combat-runtime + character-correctness | Prefer baked Bip001 packs; strip position tracks |
@@ -245,7 +248,7 @@ These are **not fully wired in code yet** — agents should use the listed skill
 ```
 [ ] /play bare → design gate visible; HUD hidden
 [ ] Play → /play?char=&lobby=1 → character visible, textured, feet on grass
-[ ] Height ≈ 1.8 * 4.2 in play (or documented SI if migrated)
+[ ] Height ≈ **1.8 m** in play and space (Box3; PLAYER_SCALE=1)
 [ ] equip loadout non-empty; not T-pose pile of meshes
 [ ] terrainY shared for feet + grass
 [ ] /space opens race; Fit 1.8 m; bones + colliders visible
