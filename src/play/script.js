@@ -18773,6 +18773,19 @@ var Player = class {
     if (name.indexOf("fall") !== -1) return "Fall";
     // Substring match so KayKit "Running_A" / "Running_B" classify to Run.
     if (name.indexOf("run") !== -1) return "Run";
+    if (name.indexOf("block") !== -1 || name.indexOf("shield") !== -1)
+      return "Block";
+    if (name.indexOf("roll") !== -1 || name.indexOf("dodge") !== -1)
+      return "Roll";
+    if (name.indexOf("cast") !== -1 || name.indexOf("magic") !== -1)
+      return "Cast";
+    if (
+      name.indexOf("attack") !== -1 ||
+      name.indexOf("slash") !== -1 ||
+      name.indexOf("strike") !== -1 ||
+      name.indexOf("jab") !== -1
+    )
+      return "Attack";
     return null;
   }
   _registerClip(slot, clip, sourceRig) {
@@ -18791,6 +18804,22 @@ var Player = class {
             this.rigType +
             " rig. Animation may look wrong.",
         );
+      }
+    }
+    // Strip bone .position tracks on grounded kits (hip-float / pelvis Y drift).
+    if (finalClip && finalClip.tracks && finalClip.tracks.length) {
+      const kept = finalClip.tracks.filter(
+        (t) => !/\.position/.test(t.name || ""),
+      );
+      if (kept.length !== finalClip.tracks.length) {
+        finalClip.tracks = kept;
+        if (typeof finalClip.resetDuration === "function") {
+          try {
+            finalClip.resetDuration();
+          } catch (e) {
+            /* ignore */
+          }
+        }
       }
     }
     finalClip.name = slot;
@@ -19132,6 +19161,21 @@ var Player = class {
       this._heldAction = null;
     }
     return true;
+  }
+  playAttackCombo(opts) {
+    const order = ["Attack", "Attack2", "Attack3", "Attack4"];
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    if (now - (this._attackComboT || 0) > 900) this._attackCombo = 0;
+    let tries = 0;
+    let slot = order[(this._attackCombo || 0) % order.length];
+    while (!this.actions[slot] && tries < order.length) {
+      this._attackCombo = (this._attackCombo || 0) + 1;
+      slot = order[this._attackCombo % order.length];
+      tries++;
+    }
+    this._attackCombo = (this._attackCombo || 0) + 1;
+    this._attackComboT = now;
+    return this.playOneShot(slot, opts || { speed: 1.15 });
   }
   update(dt) {
     if (this.mixer) this.mixer.update(dt);
@@ -19539,7 +19583,9 @@ var World = class {
     window.addEventListener("mousedown", (e) => {
       if (!this.isPointerLocked) return;
       if (e.button === 0) {
-        triggerOneShot("Attack");
+        // Combo: Attack → Attack2 → Attack3 when slots exist
+        if (this.player.playAttackCombo) this.player.playAttackCombo({ speed: 1.15 });
+        else triggerOneShot("Attack");
       } else if (e.button === 2) {
         this._blockHeld = true;
         triggerHold("Block", true);

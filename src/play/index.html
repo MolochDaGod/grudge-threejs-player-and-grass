@@ -814,7 +814,13 @@
         try {
           await railwayReady;
         } catch (_) { /* guest continues */ }
-        setTimeout(() => loadScript("/src/play/script.js").then(resolve, reject), 0);
+        setTimeout(
+          () =>
+            loadScript("/src/play/script.js")
+              .then(() => loadScript("/src/play/player-runtime-enhance.js"))
+              .then(resolve, reject),
+          0,
+        );
       };
       if (document.readyState === "complete") kick();
       else window.addEventListener("load", kick, { once: true });

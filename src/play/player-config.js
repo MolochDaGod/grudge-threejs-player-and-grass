@@ -567,23 +567,60 @@
         return ANIMATION_STATES.indexOf(s) === -1;
       }),
     );
+    // Shared bip001 GLBs under character/races/anims/ (idle/walk/run/attack/cast).
+    // Prefer these over missing .fbx paths and remote Mixamo packs.
+    const BIP001_GLB = {
+      Idle: [MOBILE_ANIMS.idle],
+      Walk: [MOBILE_ANIMS.walk],
+      Run: [MOBILE_ANIMS.run],
+      Jump: [MOBILE_ANIMS.run],
+      Fall: [MOBILE_ANIMS.idle],
+      Attack: [MOBILE_ANIMS.attack],
+      Attack2: [MOBILE_ANIMS.attack],
+      Attack3: [MOBILE_ANIMS.attackSpear],
+      Attack4: [MOBILE_ANIMS.attack],
+      Block: [MOBILE_ANIMS.idle],
+      Roll: [MOBILE_ANIMS.run],
+      RollLeft: [MOBILE_ANIMS.run],
+      RollRight: [MOBILE_ANIMS.run],
+      Dodge: [MOBILE_ANIMS.run],
+      Cast: [MOBILE_ANIMS.cast],
+      Skill1: [MOBILE_ANIMS.attack],
+      Skill2: [MOBILE_ANIMS.attack],
+      Skill3: [MOBILE_ANIMS.cast],
+      Skill4: [MOBILE_ANIMS.cast],
+      Skill5: [MOBILE_ANIMS.run],
+      Skill6: [MOBILE_ANIMS.attack],
+      Skill7: [MOBILE_ANIMS.attack],
+      Skill8: [MOBILE_ANIMS.attack],
+      Skill9: [MOBILE_ANIMS.cast],
+      Death: [MOBILE_ANIMS.death],
+    };
     allStates.forEach(function (state) {
       const lower = state
         .toLowerCase()
         .replace("rollleft", "roll-left")
         .replace("rollright", "roll-right");
       const shared = SHARED_ANIMS[state] || [];
-      // Per-race overrides first, then shared Mixamo sources
+      // Prefer shipped bip001 GLBs (rotation-friendly on grounded kits).
+      const glbPack = BIP001_GLB[state] || [];
+      // Per-race / generic FBX overrides if present on disk.
       const racePrefixed = {
         url: ANIM_DIR + character.id + "." + lower + ".fbx",
         rig: "bip001",
       };
-      const raceGeneric = {
+      const raceGenericFbx = {
         url: ANIM_DIR + lower + ".fbx",
         rig: "bip001",
       };
+      const raceGenericGlb = {
+        url: ANIM_DIR + lower + ".glb",
+        rig: "bip001",
+      };
       const weaponMapped = profileOverrides[state] || [];
-      sources[state] = [racePrefixed, raceGeneric].concat(weaponMapped, shared);
+      sources[state] = glbPack
+        .concat([raceGenericGlb, racePrefixed, raceGenericFbx])
+        .concat(weaponMapped, shared);
     });
     return sources;
   }

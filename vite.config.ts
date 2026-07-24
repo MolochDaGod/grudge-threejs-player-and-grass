@@ -44,6 +44,9 @@ function grudgeCopyScriptJs(): Plugin {
     // Character design gate is an IIFE loaded as type=module but also needs a
     // stable path if any runtime loadScript re-fetches it. Harmless to mirror.
     "src/play/character-design-gate.js",
+    // Runtime enhance: strip root motion, feet plant/IK, attack combo — loaded
+    // after script.js via boot loadScript("/src/play/player-runtime-enhance.js").
+    "src/play/player-runtime-enhance.js",
     // sandbox-spawner is also dynamically imported via boot's `import('./sandbox-spawner.js')`
     // and Vite catches that one through the import graph, so we don't need
     // to copy it. Same for player-config / equipment-manager / sdk-bootstrap
