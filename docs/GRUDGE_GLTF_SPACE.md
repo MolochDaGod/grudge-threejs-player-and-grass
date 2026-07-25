@@ -31,7 +31,21 @@ This project ships a **Grudge-native** Three.js workspace that covers the same p
 - **1 unit = 1 metre** in the space viewport (SI).
 - Fit applies `targetHeightM = 1.8` then grounds feet (`bbox.min.y → 0`).
 - Body region sliders scale Bip001 bones (bulk on chest/belly = XZ).
-- Play handoff still uses lobby `PLAYER_SCALE = 4.2` and `targetHeight = 1.8 * 4.2` for the grass world.
+- Play handoff uses lobby **PLAYER_SCALE = 1** and `targetHeight = 1.8` (SI).
+
+## Production helpers (required)
+
+| Helper | Behaviour |
+|--------|-----------|
+| **Weapon collider** | Box fitted to **visible weapon mesh** geometry AABB; **parented to that mesh** (not a +Y stick on `R_hand_container`). |
+| **Body collider** | Capsule from body-mesh AABB after Fit (excludes sword/shield/bow). |
+| **SkeletonHelper** | SkinnedMesh skeleton debug (toggle). |
+| **AxesHelper** | 1 m world axes + per-asset axes (toggle). |
+| **Collider edit** | Right panel: r / h / offset / box half-extents. |
+| **Agent chat** | Local production commands: fit, refit colliders, export, skeleton, SI help. |
+| **Refit colliders → mesh** | Re-measure after equip or bulk edits. |
+
+**Known bad pattern (fixed):** parenting a tall Y-box to the hand bone → anim looks like the hit volume “swings down.”
 
 ## Collider / IK export shape
 

@@ -35,6 +35,8 @@ import {
   createColliderHelpers,
   defaultCharacterColliders,
   collidersToJSON,
+  fitCollidersToMeshes,
+  findVisibleWeaponMeshes,
   type ColliderDef,
 } from "./helpers/colliderHelpers";
 import {
@@ -60,11 +62,14 @@ export interface AssetEntry {
   raceId?: RaceId;
   prefix?: string;
   boneHelper?: THREE.Group;
+  skeletonHelper?: THREE.SkeletonHelper;
+  axesHelper?: THREE.AxesHelper;
   colliderDispose?: () => void;
   colliderDefs: ColliderDef[];
   regions: RegionMap;
   colorVariantId?: string;
   fitted: boolean;
+  equippedMeshes?: string[];
 }
 
 export class GrudgeGltfSpace {
@@ -82,8 +87,11 @@ export class GrudgeGltfSpace {
   humanRef: THREE.Group;
   showBones = true;
   showColliders = true;
+  showSkeleton = true;
+  showAxes = false;
   private _animFrame = 0;
   private _onChange: (() => void) | null = null;
+  private _worldAxes: THREE.AxesHelper | null = null;
 
   constructor(canvasHost: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({
@@ -137,6 +145,12 @@ export class GrudgeGltfSpace {
 
     this.humanRef = this._makeHumanYardstick();
     this.scene.add(this.humanRef);
+
+    // World origin axes (SI metres) — production helper baseline
+    this._worldAxes = new THREE.AxesHelper(1.0);
+    this._worldAxes.name = "world_axes_1m";
+    this._worldAxes.visible = false;
+    this.scene.add(this._worldAxes);
 
     const draco = new DRACOLoader();
     draco.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
@@ -266,11 +280,27 @@ export class GrudgeGltfSpace {
       /* offline / missing skin */
     }
 
-    catalogAndDefaultEquip(entry.model, race.prefix);
+    const equip = catalogAndDefaultEquip(entry.model, race.prefix);
+    entry.equippedMeshes = equip.equipped;
     this.fitActiveToHuman();
+    // Mesh-fit colliders AFTER equip + SI fit so weapon box rides the sword mesh
+    this.refitCollidersToMeshes(entry);
     this.refreshHelpers();
     this._notify();
     return entry;
+  }
+
+  /**
+   * Rebuild body capsule + weapon blade from actual mesh bounds.
+   * Weapon collider parents to the visible weapon mesh (not a hand Y-stick).
+   */
+  refitCollidersToMeshes(entry?: AssetEntry | null) {
+    const a = entry ?? this.active;
+    if (!a) return;
+    a.model.updateWorldMatrix(true, true);
+    a.colliderDefs = fitCollidersToMeshes(a.model, a.colliderDefs);
+    this.refreshHelpers();
+    this._notify();
   }
 
   private _registerAsset(
@@ -341,6 +371,8 @@ export class GrudgeGltfSpace {
     const f = fitToHumanHeight(a.model, target);
     a.fitted = true;
     a.regions = defaultRegions();
+    // Colliders must re-measure after scale change
+    this.refitCollidersToMeshes(a);
     this.refreshHelpers();
     this._notify();
     return f;
@@ -408,31 +440,81 @@ export class GrudgeGltfSpace {
     this.refreshHelpers();
   }
 
+  setShowSkeleton(v: boolean) {
+    this.showSkeleton = v;
+    this.refreshHelpers();
+  }
+
+  setShowAxes(v: boolean) {
+    this.showAxes = v;
+    if (this._worldAxes) this._worldAxes.visible = v;
+    this.refreshHelpers();
+  }
+
   updateCollider(id: string, patch: Partial<ColliderDef>) {
     const a = this.active;
     if (!a) return;
     const d = a.colliderDefs.find((c) => c.id === id);
     if (!d) return;
     Object.assign(d, patch);
+    if (patch.box) d.box = { ...patch.box };
     this.refreshHelpers();
     this._notify();
+  }
+
+  /** Visible weapon mesh names for UI / agent chat. */
+  getWeaponMeshNames(): string[] {
+    const a = this.active;
+    if (!a) return [];
+    return findVisibleWeaponMeshes(a.model).map((m) => m.name);
   }
 
   refreshHelpers() {
     for (const a of this.assets) {
       if (a.boneHelper?.userData.dispose) a.boneHelper.userData.dispose();
       a.boneHelper = undefined;
+      if (a.skeletonHelper) {
+        a.skeletonHelper.removeFromParent();
+        a.skeletonHelper = undefined;
+      }
+      if (a.axesHelper) {
+        a.axesHelper.removeFromParent();
+        a.axesHelper = undefined;
+      }
       if (a.colliderDispose) a.colliderDispose();
       a.colliderDispose = undefined;
 
       if (this.showBones) {
         a.boneHelper = createBoneHelperGroup(a.model, { scale: 0.07 });
       }
+      if (this.showSkeleton) {
+        // First SkinnedMesh drives SkeletonHelper
+        let skinned: THREE.SkinnedMesh | null = null;
+        a.model.traverse((o) => {
+          if (!skinned && (o as THREE.SkinnedMesh).isSkinnedMesh) {
+            skinned = o as THREE.SkinnedMesh;
+          }
+        });
+        if (skinned) {
+          const sk = new THREE.SkeletonHelper(skinned);
+          sk.name = "grudge_skeleton_helper";
+          // SkeletonHelper draws in world space; add to scene not model
+          this.scene.add(sk);
+          a.skeletonHelper = sk;
+        }
+      }
+      if (this.showAxes) {
+        const ax = new THREE.AxesHelper(0.35);
+        ax.name = "asset_axes";
+        a.model.add(ax);
+        a.axesHelper = ax;
+      }
       if (this.showColliders) {
         const { dispose } = createColliderHelpers(a.model, a.colliderDefs);
         a.colliderDispose = dispose;
       }
     }
+    if (this._worldAxes) this._worldAxes.visible = this.showAxes;
     this._notify();
   }
 
@@ -440,6 +522,8 @@ export class GrudgeGltfSpace {
     const a = this.active;
     if (!a) return;
     if (a.boneHelper?.userData.dispose) a.boneHelper.userData.dispose();
+    if (a.skeletonHelper) a.skeletonHelper.removeFromParent();
+    if (a.axesHelper) a.axesHelper.removeFromParent();
     if (a.colliderDispose) a.colliderDispose();
     this.scene.remove(a.root);
     this.assets = this.assets.filter((x) => x.id !== a.id);

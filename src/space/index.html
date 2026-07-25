@@ -35,13 +35,16 @@
         <div class="section-title">Animations</div>
         <div class="clip-list" id="clip-list"></div>
 
-        <div class="section-title">Display</div>
-        <label class="toggle"><input type="checkbox" id="toggle-bones" checked /> Bone helpers (root / hands / feet / weapon)</label>
-        <label class="toggle"><input type="checkbox" id="toggle-colliders" checked /> Colliders (body + weapon)</label>
+        <div class="section-title">Display · helpers</div>
+        <label class="toggle"><input type="checkbox" id="toggle-bones" checked /> Bone helpers (hands / feet / weapon)</label>
+        <label class="toggle"><input type="checkbox" id="toggle-colliders" checked /> Colliders (mesh-fit body + weapon)</label>
+        <label class="toggle"><input type="checkbox" id="toggle-skeleton" checked /> SkeletonHelper</label>
+        <label class="toggle"><input type="checkbox" id="toggle-axes" /> AxesHelper (1 m world + asset)</label>
         <label class="toggle"><input type="checkbox" id="toggle-grid" checked /> 1 m grid</label>
         <label class="toggle"><input type="checkbox" id="toggle-human" checked /> 1.8 m human yardstick</label>
 
         <div class="actions">
+          <button type="button" id="btn-refit-colliders">Refit colliders → mesh</button>
           <button type="button" class="danger" id="btn-remove">Remove asset</button>
         </div>
 
@@ -79,6 +82,21 @@
 
         <div class="section-title">Bone roles</div>
         <div class="bone-list" id="bone-list"></div>
+
+        <div class="section-title">Collider edit (SI m)</div>
+        <p style="color:var(--muted);font-size:10px;margin:0 0 6px">
+          Weapon box parents to the <b>visible weapon mesh</b> (not a free Y-stick on the hand).
+        </p>
+        <div id="collider-edit"></div>
+
+        <div class="section-title">Agent chat</div>
+        <div id="agent-chat" class="agent-chat">
+          <div id="agent-log" class="agent-log"></div>
+          <form id="agent-form" class="agent-form">
+            <input id="agent-input" type="text" placeholder="e.g. refit colliders · fit 1.8 · export · what is SI" autocomplete="off" />
+            <button type="submit">Ask</button>
+          </form>
+        </div>
 
         <div class="section-title">Status</div>
         <div id="status" style="color:var(--muted);font-size:11px;min-height:32px">Ready.</div>

@@ -186,3 +186,42 @@ html, body {
 .bone-list { font-size: 10px; color: var(--muted); max-height: 120px; overflow: auto; }
 .bone-list div { padding: 2px 0; }
 .bone-list .k { color: var(--gold-dim); display: inline-block; width: 64px; }
+
+/* Collider editor */
+.col-card {
+  background: rgba(0,0,0,0.28); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px; margin-bottom: 8px;
+}
+.col-card .col-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px; font-size: 11px; color: var(--gold-dim);
+}
+.col-card .col-meta { font-size: 9px; color: var(--muted); margin-bottom: 6px; word-break: break-all; }
+.col-card .row label { width: 56px; }
+
+/* Agent chat */
+.agent-chat {
+  display: flex; flex-direction: column; gap: 6px;
+  background: rgba(0,0,0,0.28); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px; max-height: 240px;
+}
+.agent-log {
+  flex: 1; overflow-y: auto; min-height: 80px; max-height: 140px;
+  font-size: 10px; line-height: 1.45; color: var(--muted);
+}
+.agent-log .msg { margin: 0 0 6px; }
+.agent-log .msg.user { color: var(--text); }
+.agent-log .msg.bot { color: var(--ok); }
+.agent-log .msg.bot b { color: var(--gold-dim); }
+.agent-form { display: flex; gap: 4px; }
+.agent-form input {
+  flex: 1; background: var(--panel2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); padding: 6px 8px;
+  font-family: var(--font); font-size: 11px;
+}
+.agent-form button {
+  background: var(--panel2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--gold); padding: 6px 10px;
+  font-family: var(--font); font-size: 11px; cursor: pointer;
+}
+.agent-form button:hover { border-color: var(--gold); }
