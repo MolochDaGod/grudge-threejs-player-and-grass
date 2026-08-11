@@ -38,7 +38,20 @@ Legacy KayKit characters are kept as a secondary tier with their own animation b
 | 1 – 9 | Skill slots 1–9 |
 Attack / Block / Roll / Dodge / Skill slots no-op silently if no clip is bound, so the controller wires up before you have animation GLBs in place.
 ## Equipment toggling
-For Bip001 race characters the right-side **Equipment** panel auto-populates with every armor / weapon / shield / utility variant baked into the FBX (see `EquipmentManager` slot regex in `src/equipment-manager.js`). Click a variant letter to equip it; click again to unequip. Behind the scenes this just toggles `mesh.visible` on the matching `*_Units_*` child meshes.
+For Bip001 race characters the right-side **Equipment** panel auto-populates with every armor / weapon / shield / utility variant baked into the FBX (see `EquipmentManager` slot regex in `src/play/equipment-manager.js`). Click a variant letter to equip it; click again to unequip. Behind the scenes this just toggles `mesh.visible` on the matching `*_Units_*` child meshes.
+
+### Weapon hold pose (post-mixer)
+
+**SSOT:** ObjectStore `js/grudge6-weapon-hold-pose.js` (copy: `src/play/grudge6-weapon-hold-pose.js` → `window.Grudge6WeaponHoldPose`).
+
+After each `mixer.update`, play applies the same residual as Main Panel / Casting:
+
+```text
+mixer.update(dt)
+→ applyWeaponHoldPose(mixer, gait, kind)  // gait from Idle/Walk/Run clip; kind from equipped slot
+```
+
+Loaded as a module in `src/play/index.html`. **Do not invent a parallel grip stack** — keep the play copy in sync with ObjectStore.
 ## Animation hookup
 The `Player` class fills its animation slots in this order (per slot, first hit wins):
 1. A clip embedded in the character's own GLB whose name matches the slot.
@@ -69,6 +82,7 @@ threejs-player-and-grass/
 │  ├─ style.css
 │  ├─ player-config.js        # Character roster, default, anim sources
 │  ├─ equipment-manager.js    # window.GrudgeEquipmentManager (Bip001)
+│  ├─ grudge6-weapon-hold-pose.js  # hold residual SSOT (ObjectStore mirror)
 │  └─ script.js               # Bundled three.js scene + Player + World
 └─ dist/                      # Mirror of src/, deployable
 ```

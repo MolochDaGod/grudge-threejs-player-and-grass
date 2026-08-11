@@ -19179,6 +19179,50 @@ var Player = class {
   }
   update(dt) {
     if (this.mixer) this.mixer.update(dt);
+    // Post-mixer weapon hold residual (SSOT: ObjectStore grudge6-weapon-hold-pose)
+    // Same applyWeaponHoldPose(mixer, gait, kind) as main-panel + Casting — no parallel stack.
+    try {
+      const hold = globalThis.Grudge6WeaponHoldPose;
+      if (hold?.applyWeaponHoldPose && this.mixer && this.model && globalThis.THREE) {
+        let kind = this.weaponHoldKind || "sword";
+        if (!this.weaponHoldKind && this.equipment?.equipped) {
+          const eq = this.equipment.equipped;
+          for (const s of [
+            "sword",
+            "dagger",
+            "axe",
+            "mace",
+            "hammer",
+            "spear",
+            "pick",
+            "bow",
+            "staff",
+          ]) {
+            if (eq[s]) {
+              kind = s;
+              break;
+            }
+          }
+        }
+        let gait = "idle";
+        const animName =
+          (this.currentAction &&
+            this.currentAction.getClip &&
+            this.currentAction.getClip()?.name) ||
+          this.currentAnim ||
+          "";
+        const an = String(animName);
+        if (/run|sprint|jog/i.test(an)) gait = "run";
+        else if (/walk|loco|move/i.test(an)) gait = "walk";
+        hold.applyWeaponHoldPose(this.mixer, gait, kind, {
+          THREE: globalThis.THREE,
+          root: this.model,
+          hand: "both",
+        });
+      }
+    } catch (eHold) {
+      /* optional SSOT not loaded */
+    }
   }
 };
 
